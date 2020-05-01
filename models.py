@@ -1,0 +1,114 @@
+# This file is part of HappySchool.
+#
+# HappySchool is the legal property of its developers, whose names
+# can be found in the AUTHORS file distributed with this source
+# distribution.
+#
+# HappySchool is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# HappySchool is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with HappySchool.  If not, see <http://www.gnu.org/licenses/>.
+
+from django.db import models
+
+from core.models import StudentModel, ResponsibleModel, TeachingModel
+
+
+class GrandSetSettingsModel(models.Model):
+    teachings = models.ManyToManyField(TeachingModel)
+
+
+class ActivityModel(models.Model):
+    """
+    An activity of the GrandSet.
+    """
+
+    activity_name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, default="")
+    responsibles = models.ManyToManyField(ResponsibleModel, blank=True)
+    datetime_creation = models.DateTimeField(auto_now_add=True)
+    datetime_update = models.DateTimeField(auto_now=True)
+
+
+class GroupModel(models.Model):
+    """
+    A set of students that goes from activity to activity.
+    """
+
+    group_name = models.CharField(max_length=100)
+    students = models.ManyToManyField(StudentModel)
+    datetime_creation = models.DateTimeField(auto_now_add=True)
+    datetime_update = models.DateTimeField(auto_now=True)
+
+
+class GrandSetModel(models.Model):
+    """
+    A Grand Set event.
+    """
+
+    date = models.DateField()
+    activities = models.ManyToManyField(ActivityModel)
+    datetime_creation = models.DateTimeField(auto_now_add=True)
+    datetime_update = models.DateTimeField(auto_now=True)
+
+
+class ActivityLogModel(models.Model):
+    """
+    An ongoing activity.
+    """
+    ON_THE_WAY = "IN"
+    ON_GOING = "ON"
+    LEAVING = "OUT"
+    DONE = "DON"
+    STATUS_CHOICES = [
+        (ON_THE_WAY, "En route"),
+        (ON_GOING, "Actif"),
+        (LEAVING, "Sorti"),
+        (DONE, "Fini")
+    ]
+
+    activity = models.ForeignKey(ActivityModel, on_delete=models.CASCADE)
+    grand_set = models.ForeignKey(GrandSetModel, on_delete=models.CASCADE, null=True, default=None)
+    group = models.ForeignKey(
+        GroupModel,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
+    status = models.CharField(
+        choices=STATUS_CHOICES,
+        max_length=3,
+        default=ON_THE_WAY
+    )
+    datetime_creation = models.DateTimeField(auto_now_add=True)
+    datetime_update = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "%s - %s : %s (%s)" % (
+            self.datetime_update,
+            self.group.group_name,
+            self.activity.activity_name,
+            self.status
+        )
+
+
+class GrandSetSeriesModel(models.Model):
+    """
+    A Grand Set series that follows a set of Grand Set. It records
+    the groups involved as well as the activities that do not
+    necesseraly occur at every Grand Set.
+    """
+
+    groups = models.ManyToManyField(GroupModel)
+    activities = models.ManyToManyField(ActivityModel)
+    grand_sets = models.ManyToManyField(GrandSetModel)
+    datetime_creation = models.DateTimeField(auto_now_add=True)
+    datetime_update = models.DateTimeField(auto_now=True)

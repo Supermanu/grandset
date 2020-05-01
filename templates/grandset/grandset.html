@@ -1,0 +1,20 @@
+{% extends "core/base_vue.html" %}
+
+{% block header %}
+<title>HappySchool : Grand Set</title>
+
+{% endblock %}
+{% block content %}
+{% load render_bundle from webpack_loader %}
+
+<script>
+    const current_app = "grandset";
+    const settings = JSON.parse('{{ settings|safe }}');;
+    const menu = {{ menu|safe }};
+    const last_grandset = {{ last_grandset|safe }}
+</script>
+<div id="vue-app"></div>
+
+{% render_bundle 'grandset' %}
+
+{% endblock %}
