@@ -84,7 +84,7 @@ export default {
             if (this.search === "") return this.activities;
 
             return this.activities.filter(a => {
-                return a.activity_name.includes(this.search);
+                return a.activity_name.toLowerCase().includes(this.search.toLowerCase());
             });
         },
     },
