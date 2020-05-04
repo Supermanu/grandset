@@ -37,6 +37,9 @@ class ActivityModel(models.Model):
     datetime_creation = models.DateTimeField(auto_now_add=True)
     datetime_update = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.activity_name
+
 
 class GroupModel(models.Model):
     """
@@ -47,6 +50,9 @@ class GroupModel(models.Model):
     students = models.ManyToManyField(StudentModel)
     datetime_creation = models.DateTimeField(auto_now_add=True)
     datetime_update = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.group_name
 
 
 class GrandSetModel(models.Model):
