@@ -38,7 +38,7 @@
             </b-row>
             <b-row>
                 <b-col>
-                    <b-card-group deck>
+                    <b-card-group columns>
                         <activity-overview
                             v-for="activity in filteredActivities"
                             :key="activity.id"
