@@ -174,6 +174,7 @@ export default {
                                                 activity.participant = "count_participant" in actCount ? actCount.count_participant : 0;
                                             } else {
                                                 activity.done = 0;
+                                                activity.participant = 0;
                                             }
                                         });
                                         this.activities = activities;
