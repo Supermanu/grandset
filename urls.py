@@ -28,6 +28,7 @@ app_name = 'grandset'
 urlpatterns = [
     path("", views.GrandSetView.as_view(), name="grandset"),
     path("api/activity_stat/<int:grand_set>/<int:group>/", views.ActivityStatAPI.as_view()),
+    path("api/group_without_activity/<int:grand_set>/", views.GroupWithoutActivityAPI.as_view()),
 ]
 
 router = DefaultRouter()

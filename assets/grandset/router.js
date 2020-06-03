@@ -22,6 +22,7 @@ import VueRouter from "vue-router";
 
 Vue.use(VueRouter);
 
+import GrandSetCreation from "./grandsetcreation.vue";
 import GrandSet from "./grandset.vue";
 import ActivityChange from "../grandset/activitychange.vue";
 import ActivityManagement from "../grandset/activitymanagement.vue";
@@ -41,11 +42,16 @@ export default new VueRouter({
             }
         },
         {
+            path: "/grand_set_series/:objectId/",
+            component: GrandSetCreation,
+            props: true
+        },
+        {
             path: "/grand_set/:grandSetId/",
             component: GrandSet,
         },
         {
-            path: "/activitychange/:activityLogId/",
+            path: "/activitychange/:grandSetId/:groupId/:activityLogId/",
             component: ActivityChange,
             props: true
         },

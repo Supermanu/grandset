@@ -21,14 +21,16 @@
     <div>
         <b-container>
             <b-row>
-                <b-btn @click="$router.go(-1)">
-                    Retour
-                </b-btn>
+                <b-col>
+                    <b-btn @click="$router.go(-1)">
+                        Retour
+                    </b-btn>
+                </b-col>
             </b-row>
             <b-row>
                 <b-col
                     sm="12"
-                    md="6"
+                    md="5"
                     v-if="group"
                 >
                     <h3>{{ group.group_name }}</h3>
@@ -49,21 +51,22 @@
                             button
                             class="d-flex justify-content-between align-items-center"
                             @click="changeActivity(activity)"
-                            :disabled="activity.id == activityLog.activity"
+                            :disabled="activityLog ? activity.id == activityLog.activity : false"
                         >
                             {{ activity.activity_name }}
                             <span>
+                                <small>± {{ getMinutes(activity.average_time) }}min.</small> 
                                 <b-badge
                                     variant="primary"
                                     pill
                                 >
-                                    Fait : {{ activity.done }}
+                                    Fait : {{ activity.done }}/{{ activity.recommended_participation }}
                                 </b-badge>
                                 <b-badge
                                     variant="primary"
                                     pill
                                 >
-                                    Participants : {{ activity.participant }}
+                                    Participants : {{ activity.participant }}/{{ activity.max_participant }}
                                 </b-badge>
                             </span>
                         </b-list-group-item>
@@ -100,6 +103,14 @@ export default {
             type: String,
             default: "-1"
         },
+        grandSetId: {
+            type: String,
+            default: "-1",
+        },
+        groupId: {
+            type: String,
+            default: "-1",
+        }
     },
     data: function () {
         return {
@@ -110,87 +121,99 @@ export default {
         };
     },
     methods: {
+        getMinutes: function (minutes) {
+            return parseInt(minutes.slice(0, 2)) * 60 + parseInt(minutes.slice(3, 5));
+        },
         lastUpdate: function (lastUpdate) {
             return String(Moment(lastUpdate).calendar()).toLowerCase();
         },
         changeActivity: function (activity) {
-            let app = this;
-            axios.patch(
-                `/grandset/api/activity_log/${this.activityLogId}/`,
-                {status: "DON"},
-                token
-            )
+            // let app = this;
+            if (this.activityLog) {
+                axios.patch(
+                    `/grandset/api/activity_log/${this.activityLogId}/`,
+                    {status: "DON"},
+                    token
+                )
+                    .then(() => {
+                        this.createNewLog(activity);
+                    });
+            } else {
+                this.createNewLog(activity);
+            }
+        },
+        createNewLog: function (activity) {
+            const newLog = {
+                grand_set: this.grandSetId,
+                group: this.groupId,
+                activity: activity.id,
+            };
+            axios.post("/grandset/api/activity_log/", newLog, token)
                 .then(() => {
-                    const newLog = {
-                        grand_set: app.activityLog.grand_set,
-                        group: app.activityLog.group,
-                        activity: activity.id,
-                    };
-                    axios.post("/grandset/api/activity_log/", newLog, token)
-                        .then(() => {
-                            app.$router.push(`/grand_set/${app.activityLog.grand_set}`, () => {
-                                app.$root.$bvToast.toast(
-                                    `${app.group.group_name} est maintenant dans l'activité ${activity.activity_name}`,
-                                    {
-                                        variant: "success",
-                                        noCloseButton: true,
-                                    }
-                                );
-                            });
-                        });
+                    this.$router.push(`/grand_set/${this.grandSetId}`, () => {
+                        this.$root.$bvToast.toast(
+                            `${this.group.group_name} est maintenant dans l'activité ${activity.activity_name}`,
+                            {
+                                variant: "success",
+                                noCloseButton: true,
+                            }
+                        );
+                    });
                 });
-        }
+        },
     },
     mounted: function () {
         // Get full activityLog object.
-        axios.get(`/grandset/api/activity_log/${this.activityLogId}/`)
-            .then(actLogResp => {
-                this.activityLog = actLogResp.data;
+        if (this.activityLogId !== "-1") {
+            axios.get(`/grandset/api/activity_log/${this.activityLogId}/`)
+                .then(actLogResp => {
+                    this.activityLog = actLogResp.data;
+                });
+        }
 
-                // Get full group object.
-                axios.get(`/grandset/api/group/${this.activityLog.group}`)
-                    .then(respGroup => {
-                        this.group = respGroup.data;
-                    });
+        // Get full group object.
+        axios.get(`/grandset/api/group/${this.groupId}`)
+            .then(respGroup => {
+                this.group = respGroup.data;
+            });
 
-                // Get activities of the current GrandSet.
-                axios.get(`/grandset/api/grandset/${this.activityLog.grand_set}/`)
-                    .then(respGrandSet => {
-                        const promiseActivities = respGrandSet.data.activities.map(activity => {
-                            return axios.get(`/grandset/api/activity/${activity}/`);
-                        });
+        // Get activities of the current GrandSet.
+        axios.get(`/grandset/api/grandset/${this.grandSetId}/`)
+            .then(respGrandSet => {
+                const promiseActivities = respGrandSet.data.activities.map(activity => {
+                    return axios.get(`/grandset/api/activity/${activity}/`);
+                });
 
-                        Promise.all(promiseActivities)
-                            .then(resps => {
-                                const activities = resps.map(r => r.data);
+                Promise.all(promiseActivities)
+                    .then(resps => {
+                        const activities = resps.map(r => r.data);
 
-                                axios.get(`/grandset/api/activity_stat/${this.activityLog.grand_set}/${this.activityLog.group}/`)
-                                    .then(respStat => {
-                                        const activityCount = JSON.parse(respStat.data);
-                                        activities.forEach(activity => {
-                                            const actCount = activityCount.find(aC => aC.activity == activity.id);
-                                            if (actCount) {
-                                                activity.done = "count_group" in actCount ? actCount.count_group : 0;
-                                                activity.participant = "count_participant" in actCount ? actCount.count_participant : 0;
-                                            } else {
-                                                activity.done = 0;
-                                                activity.participant = 0;
-                                            }
-                                        });
-                                        this.activities = activities;
-                                    });
+                        axios.get(`/grandset/api/activity_stat/${this.grandSetId}/${this.groupId}/`)
+                            .then(respStat => {
+                                const activityCount = JSON.parse(respStat.data);
+                                activities.forEach(activity => {
+                                    const actCount = activityCount.find(aC => aC.activity == activity.id);
+                                    if (actCount) {
+                                        activity.done = "count_group" in actCount ? actCount.count_group : 0;
+                                        activity.participant = "count_participant" in actCount ? actCount.count_participant : 0;
+                                    } else {
+                                        activity.done = 0;
+                                        activity.participant = 0;
+                                    }
+                                });
+                                this.activities = activities;
+                            });
 
-                                // Get activity history for the current group.
-                                axios.get(`/grandset/api/activity_log/?group=${this.activityLog.group}&ordering=-datetime_update`)
-                                    .then(respLogs => {
-                                        this.logs = respLogs.data.results.filter(log => {
-                                            return activities.find(a => a.id == log.activity)
-                                                && this.activityLog.grand_set == log.grand_set;
-                                        }).map(log => {
-                                            log.activity = activities.find(a => a.id == log.activity);
-                                            return log;
-                                        });
-                                    });
+                        // Get activity history for the current group.
+                        axios.get(`/grandset/api/activity_log/?group=${this.groupId}&ordering=-datetime_update`)
+                            .then(respLogs => {
+                                this.logs = respLogs.data.results.filter(log => {
+                                    return activities.find(a => a.id == log.activity)
+                                        && this.grandSetId == log.grand_set;
+                                }).map(log => {
+                                    log.activity = activities.find(a => a.id == log.activity);
+                                    return log;
+                                });
                             });
                     });
             });

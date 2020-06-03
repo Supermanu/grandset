@@ -155,3 +155,15 @@ class ActivityStatAPI(APIView):
                 activities.append(g)
 
         return Response(json.dumps(activities))
+
+
+class GroupWithoutActivityAPI(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, grand_set, format=None):
+        print(grand_set)
+        running_groups = models.ActivityLogModel.objects \
+            .filter(grand_set=grand_set) \
+            .values_list("group", flat=True)
+        groups = models.GroupModel.objects.exclude(pk__in=running_groups)
+        return Response(serializers.GroupSerializer(groups, many=True).data)

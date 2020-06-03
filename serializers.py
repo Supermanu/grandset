@@ -61,3 +61,4 @@ class GrandSetSeriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.GrandSetSeriesModel
         fields = "__all__"
+        depth = 1

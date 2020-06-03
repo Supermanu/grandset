@@ -24,27 +24,29 @@
             rounded="sm"
         >
             <b-card
-                class="mb-4"
+                class="mb-4 card"
                 footer-bg-variant="transparent"
                 no-body
-                style="min-width: 320px;"
             >
                 <template v-slot:header>
-                    <strong>{{ activity.activity_name }}</strong>
-                    <div class="float-right ml-4">
-                        <b-btn
-                            size="sm"
-                            variant="outline-primary"
-                            :to="`/activitymanagement/${$route.params.grandSetId}/${activity.id}/`"
-                        >
-                            <b-icon icon="eye-fill" />
-                        </b-btn>
-                        <b-btn
-                            size="sm"
-                            variant="danger"
-                        >
-                            <b-icon icon="trash" />
-                        </b-btn>
+                    <div class="opposite">
+                        <strong>{{ activity ? activity.activity_name : "Groupes sans activité" }} ({{ groups.length }})</strong>
+                        <span>
+                            <b-btn
+                                v-if="activity"
+                                size="sm"
+                                variant="outline-primary"
+                                :to="`/activitymanagement/${$route.params.grandSetId}/${activity.id}/`"
+                            >
+                                <b-icon icon="eye-fill" />
+                            </b-btn>
+                            <b-btn
+                                size="sm"
+                                variant="danger"
+                            >
+                                <b-icon icon="trash" />
+                            </b-btn>
+                        </span>
                     </div>
                 </template>
                 <b-list-group
@@ -56,20 +58,30 @@
                         :key="group.id"
                         v-b-toggle="'students-' + group.id"
                     >
-                        {{ group.group_name }} <em>{{ groupStatus(group) }}</em>
+                        {{ group.group_name }}
+                        <em>
+                            <b-icon
+                                v-if="group.status === 'IN'"
+                                icon="chevron-double-right"
+                            />
+                            <b-icon
+                                v-if="group.status === 'OUT'"
+                                icon="chevron-bar-right"
+                            />
+                            {{ groupStatus(group) }}
+                        </em>
                         <b-btn
                             class="float-right ml-2"
                             variant="outline-primary"
                             size="sm"
-                            :to="`/activitychange/${group.activityLog}/`"
-                            v-b-toggle.sidebar
+                            @click="activityChange(group)"
                         >
                             <b-icon icon="arrow-left-right" />
                         </b-btn>
                         <br>
                         <b-collapse 
                             :id="'students-' + group.id"
-                            :accordion="'activity-' + activity.id"
+                            :accordion="activity ? 'activity-' + activity.id : 'nullactivity'"
                         >
                             <small
                                 v-for="student in group.students_display"
@@ -83,16 +95,9 @@
                         </b-collapse>
                     </b-list-group-item>
                 </b-list-group>
-                <b-card-body v-else>Aucun groupe dans cette activité</b-card-body>
-                <template v-slot:footer>
-                    <b-btn
-                        class="float-right"
-                        variant="outline-secondary"
-                    >
-                        <b-icon icon="plus" />
-                        Ajouter groupe
-                    </b-btn>
-                </template>
+                <b-card-body v-else>
+                    Aucun groupe dans cette activité
+                </b-card-body>
             </b-card>
         </b-overlay>
     </div>
@@ -119,6 +124,14 @@ export default {
         };
     },
     methods: {
+        activityChange: function (group) {
+            const grandSetId = this.$route.params.grandSetId;
+            if (this.activity) {
+                this.$router.push(`/activitychange/${grandSetId}/${group.id}/${group.activityLog}`);
+            } else {
+                this.$router.push(`/activitychange/${grandSetId}/${group.id}/-1/`);
+            }
+        },
         lastUpdate: function (group) {
             return Moment(group.datetime_update).format("HH:mm");
         },
@@ -127,37 +140,57 @@ export default {
             case "ON":
                 return "";
             case "IN":
-                return "⮞ En route vers l'activité";
+                return "En route vers l'activité";
             case "OUT":
-                return "⮞ Sorti de l'activité";
+                return "Sorti de l'activité";
             default:
                 return "";
             }
         }
     },
     mounted: function () {
-        axios.get(`/grandset/api/activity_log/?activity=${this.activity.id}&grand_set=${this.$route.params.grandSetId}&ordering=-datetime_update`)
-            .then(resp => {
-                const ongoingLogs = resp.data.results.filter(aL => aL.status != "DON");
-                const groupsId = ongoingLogs.map(aL => aL.group);
-                Promise.all(groupsId.map(gI => axios.get(`/grandset/api/group/${gI}`)))
-                    .then(values => {
-                        this.groups = values.map((r, i) => {
-                            let group = r.data;
-                            group.status = ongoingLogs[i].status;
-                            group.activityLog = ongoingLogs[i].id;
-                            group.datetime_update = ongoingLogs[i].datetime_update;
-                            group.datetime_creation = ongoingLogs[i].datetime_creation;
-                            return group;
+        if (this.activity) {
+            axios.get(`/grandset/api/activity_log/?activity=${this.activity.id}&grand_set=${this.$route.params.grandSetId}&ordering=-datetime_update`)
+                .then(resp => {
+                    const ongoingLogs = resp.data.results.filter(aL => aL.status != "DON");
+                    const groupsId = ongoingLogs.map(aL => aL.group);
+                    Promise.all(groupsId.map(gI => axios.get(`/grandset/api/group/${gI}`)))
+                        .then(values => {
+                            this.groups = values.map((r, i) => {
+                                let group = r.data;
+                                group.status = ongoingLogs[i].status;
+                                group.activityLog = ongoingLogs[i].id;
+                                group.datetime_update = ongoingLogs[i].datetime_update;
+                                group.datetime_creation = ongoingLogs[i].datetime_creation;
+                                return group;
+                            });
+                            this.loading = false;
                         });
-                        this.loading = false;
-                    });
-                if (groupsId.length == 0) this.loading = false;
-            })
-            .catch(err => {
-                console.log(err);
-                this.loading = false;
-            });
+                    if (groupsId.length == 0) this.loading = false;
+                })
+                .catch(err => {
+                    console.log(err);
+                    this.loading = false;
+                });
+        } else {
+            // Show groups without activity.
+            axios.get(`/grandset/api/group_without_activity/${this.$route.params.grandSetId}/`)
+                .then(resp => {
+                    this.groups = resp.data;
+                    this.loading = false;
+                })
+                .catch(err => {
+                    console.log(err);
+                    this.loading = false;
+                });
+        }
     }
 };
 </script>
+
+<style>
+.opposite {
+    display: flex;
+    justify-content: space-between;
+}
+</style>

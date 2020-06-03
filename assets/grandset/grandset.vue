@@ -40,6 +40,9 @@
                 <b-col>
                     <b-card-group columns>
                         <activity-overview
+                            :grand-set="grandset"
+                        />
+                        <activity-overview
                             v-for="activity in filteredActivities"
                             :key="activity.id"
                             :activity="activity"

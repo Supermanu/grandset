@@ -112,6 +112,12 @@ export default {
     methods: {
         changeStatus: function (logIndex, newStatus) {
             const group = this.logs[logIndex].group;
+
+            if (!this.$store.state.settings.return_to_hq && newStatus === "OUT") {
+                this.$router.push(`/activitychange/${this.grandSetId}/${group.id}/${this.logs[logIndex].id}/`);
+                return;
+            }
+
             axios.patch(`/grandset/api/activity_log/${this.logs[logIndex].id}/`, {status: newStatus}, token)
                 .then(resp => {
                     let newLog = resp.data;

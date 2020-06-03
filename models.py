@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with HappySchool.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta
+
 from django.db import models
 
 from core.models import StudentModel, ResponsibleModel, TeachingModel
@@ -24,6 +26,7 @@ from core.models import StudentModel, ResponsibleModel, TeachingModel
 
 class GrandSetSettingsModel(models.Model):
     teachings = models.ManyToManyField(TeachingModel)
+    return_to_hq = models.BooleanField(default=True)
 
 
 class ActivityModel(models.Model):
@@ -32,7 +35,10 @@ class ActivityModel(models.Model):
     """
 
     activity_name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, default="")
+    max_participant = models.PositiveIntegerField(default=10)
+    recommended_participation = models.PositiveIntegerField(default=8)
+    average_time = models.DurationField(default=timedelta(minutes=20))
+    description = models.TextField(blank=True)
     responsibles = models.ManyToManyField(ResponsibleModel, blank=True)
     datetime_creation = models.DateTimeField(auto_now_add=True)
     datetime_update = models.DateTimeField(auto_now=True)
@@ -110,7 +116,7 @@ class GrandSetSeriesModel(models.Model):
     """
     A Grand Set series that follows a set of Grand Set. It records
     the groups involved as well as the activities that do not
-    necesseraly occur at every Grand Set.
+    necessarily occur at every Grand Set.
     """
 
     groups = models.ManyToManyField(GroupModel)
