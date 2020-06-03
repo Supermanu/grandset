@@ -19,10 +19,7 @@
 
 import Vue from "vue";
 
-import Vuex from "vuex";
-Vue.use(Vuex);
-
-// import store from "../grandset/store.js";
+import store from "../grandset/store.js";
 import router from "../grandset/router.js";
 import Menu from "assets/common/menu.vue";
 
@@ -32,7 +29,7 @@ new Vue({
         menuInfo: {},
         transitionName: "slide-left",
     },
-    // store,
+    store,
     router,
     template:`
     <div>
