@@ -105,6 +105,12 @@ class ActivityLogViewSet(BaseViewSet):
     ordering_fields = ["datetime_update"]
 
 
+class ActivityEvaluationViewSet(BaseViewSet):
+    queryset = models.ActivityEvaluationModel.objects.all()
+    serializer_class = serializers.ActivityEvaluationSerializer
+    filterset_fields = ['student', 'activity_log']
+
+
 class GrandSetViewSet(BaseViewSet):
     queryset = models.GrandSetModel.objects.all()
     serializer_class = serializers.GrandSetSerializer

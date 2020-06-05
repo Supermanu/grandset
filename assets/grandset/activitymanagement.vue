@@ -21,15 +21,22 @@
     <div>
         <b-container>
             <b-row>
-                <b-btn :to="`/grand_set/${grandSetId}/`">
-                    Retour au Grand Set
-                </b-btn>
+                <b-col>
+                    <b-btn :to="`/grand_set/${grandSetId}/`">
+                        Retour au Grand Set
+                    </b-btn>
+                </b-col>
             </b-row>
             <b-row v-if="activity">
-                <h2>{{ activity.activity_name }}</h2>
+                <b-col>
+                    <h2>{{ activity.activity_name }}</h2>
+                </b-col>
             </b-row>
             <b-row>
                 <b-col>
+                    <p v-if="logs.length === 0">
+                        Aucun groupe dans l'activité.
+                    </p>
                     <b-card
                         v-for="(log, index) in logs"
                         :key="log.id"
@@ -54,6 +61,7 @@
                                     </b-btn>
                                     <b-btn
                                         variant="outline-success"
+                                        :to="`/evaluation/${log.id}/${log.group.id}/`"
                                     >
                                         <b-icon icon="list-check" />
                                         Évaluer

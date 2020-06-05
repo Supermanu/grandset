@@ -88,7 +88,7 @@ class ActivityLogModel(models.Model):
     ]
 
     activity = models.ForeignKey(ActivityModel, on_delete=models.CASCADE)
-    grand_set = models.ForeignKey(GrandSetModel, on_delete=models.CASCADE, null=True, default=None)
+    grand_set = models.ForeignKey(GrandSetModel, on_delete=models.CASCADE, null=True)
     group = models.ForeignKey(
         GroupModel,
         on_delete=models.SET_NULL,
@@ -110,6 +110,20 @@ class ActivityLogModel(models.Model):
             self.activity.activity_name,
             self.status
         )
+
+
+class ActivityEvaluationModel(models.Model):
+    """
+    Evaluation of a student for an ongoing activity.
+    """
+    activity_log = models.ForeignKey(ActivityLogModel, on_delete=models.CASCADE)
+    student = models.ForeignKey(StudentModel, on_delete=models.CASCADE)
+    evaluation = models.DecimalField(max_digits=8, decimal_places=5)
+    datetime_creation = models.DateTimeField(auto_now_add=True)
+    datetime_update = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "%s (%s) : %s" % (str(self.activity_log.activity), str(self.student), self.evaluation)
 
 
 class GrandSetSeriesModel(models.Model):

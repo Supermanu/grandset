@@ -51,6 +51,12 @@ class ActivityLogSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ActivityEvaluationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ActivityEvaluationModel
+        fields = "__all__"
+
+
 class GrandSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.GrandSetModel

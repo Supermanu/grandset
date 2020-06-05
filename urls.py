@@ -35,6 +35,7 @@ router = DefaultRouter()
 router.register(r'api/group', viewset=views.GroupViewSet)
 router.register(r'api/activity', viewset=views.ActivityViewSet)
 router.register(r'api/activity_log', viewset=views.ActivityLogViewSet)
+router.register(r'api/activity_evaluation', viewset=views.ActivityEvaluationViewSet)
 router.register(r'api/grandset', viewset=views.GrandSetViewSet)
 router.register(r'api/grandset_series', viewset=views.GrandSetSeriesViewSet)
 

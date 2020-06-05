@@ -24,8 +24,9 @@ Vue.use(VueRouter);
 
 import GrandSetCreation from "./grandsetcreation.vue";
 import GrandSet from "./grandset.vue";
-import ActivityChange from "../grandset/activitychange.vue";
-import ActivityManagement from "../grandset/activitymanagement.vue";
+import ActivityChange from "./activitychange.vue";
+import ActivityManagement from "./activitymanagement.vue";
+import Evaluation from "./evaluation.vue";
 
 export default new VueRouter({
     routes: [
@@ -58,6 +59,11 @@ export default new VueRouter({
         {
             path: "/activitymanagement/:grandSetId/:activityId/",
             component: ActivityManagement,
+            props: true
+        },
+        {
+            path: "/evaluation/:activityLogId/:groupId/",
+            component: Evaluation,
             props: true
         },
     ]
