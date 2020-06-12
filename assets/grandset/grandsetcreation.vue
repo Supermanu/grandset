@@ -29,17 +29,39 @@
                     </h3>
                 </b-col>
             </b-row>
+            <b-row class="sticky-top p-2 first-line">
+                <b-col>
+                    <b-btn to="/">
+                        Retour à la liste des Grand Sets
+                    </b-btn>
+                </b-col>
+                <b-col
+                    cols="2"
+                    align-self="end"
+                >
+                    <b-btn
+                        @click="submit"
+                        variant="primary"
+                        :disabled="!hasChanged"
+                    >
+                        Sauver
+                    </b-btn>
+                </b-col>
+            </b-row>
             <b-row>
                 <b-col>
                     <b-form-row>
                         <b-col>
                             <b-form-group
                                 label="Nom de la série"
+                                :state="inputStates.name"
                             >
                                 <b-form-input
                                     type="text"
                                     v-model="name"
+                                    @update="hasChanged = true"
                                 />
+                                <span slot="invalid-feedback">{{ errorMsg("name") }}</span>
                             </b-form-group>
                         </b-col>
                     </b-form-row>
@@ -47,21 +69,27 @@
                         <b-col>
                             <b-form-group
                                 label="Date début"
+                                :state="inputStates.date_start"
                             >
                                 <b-form-input
                                     type="date"
                                     v-model="date_start"
+                                    @update="hasChanged = true"
                                 />
+                                <span slot="invalid-feedback">{{ errorMsg("date_start") }}</span>
                             </b-form-group>
                         </b-col>
                         <b-col>
                             <b-form-group
                                 label="Date fin"
+                                :state="inputStates.date_end"
                             >
                                 <b-form-input
                                     type="date"
                                     v-model="date_end"
+                                    @update="hasChanged = true"
                                 />
+                                <span slot="invalid-feedback">{{ errorMsg("date_end") }}</span>
                             </b-form-group>
                         </b-col>
                     </b-form-row>
@@ -100,10 +128,14 @@
                     </b-card>
                 </b-col>
             </b-row>
-            <b-row v-if="ready">
+            <b-row
+                v-if="ready"
+                class="mb-4"
+            >
                 <b-col>
                     <activity-selection
                         v-model="activities"
+                        @update="hasChanged = true"
                     />
                 </b-col>
             </b-row>
@@ -124,6 +156,8 @@ import axios from "axios";
 import ActivitySelection from "./activityselection.vue";
 import GroupSelection from "./groupselection.vue";
 
+const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+
 export default {
     props: {
         series: {
@@ -135,7 +169,7 @@ export default {
             default: "-1"
         },
     },
-    data() {
+    data: function () {
         return {
             name: "",
             date_start: null,
@@ -144,17 +178,85 @@ export default {
             groups: [],
             grandSets: [],
             ready: false,
+            hasChanged: false,
+            inputStates: {
+                name: null,
+                date_start: null,
+                date_end: null,
+                activities: null,
+                groups: null,
+            },
+            errors: {},
         };
     },
     components: {
         ActivitySelection,
         GroupSelection,
     },
+    watch: {
+        /**
+         * Handle returned errors states.
+         * 
+         * @param {Object} newErrors Errors states with error message.
+         */
+        errors: function (newErrors) {
+            Object.keys(this.inputStates).forEach(key => {
+                if (key in newErrors) {
+                    this.inputStates[key] = newErrors[key].length == 0;
+                } else {
+                    this.inputStates[key] = null;
+                }
+            });
+        },
+    },
+    methods: {
+        /** 
+         * Assign text error if any.
+         * 
+         * @param {String} err Field name.
+         */
+        errorMsg(err) {
+            if (err in this.errors) {
+                return this.errors[err][0];
+            } else {
+                return "";
+            }
+        },
+        /** Submit Grand Set Serie data to the server. */
+        submit: function () {
+            const data = {
+                name: this.name,
+                date_start: this.date_start,
+                date_end: this.date_end,
+                activities_id: this.activities.map(a => a.id),
+                groups_id: this.groups.map(g => g.id),
+            };
+
+            let url = "/grandset/api/grandset_series/";
+            if (this.objectId !== "-1") url += `${this.objectId}/`;
+
+            const send = this.objectId !== "-1" ? axios.put : axios.post;
+            send(url, data, token)
+                .then(() => {
+                    this.$root.$bvToast.toast("Les données ont bien été sauvegardée", {
+                        variant: "success",
+                        noCloseButton: true,
+                    });
+                    this.hasChanged = false;
+                })
+                .catch(err => {
+                    this.errors = err.response.data;
+                });
+        }
+    },
     mounted () {
         if (this.series) {
             if (this.objectId) {
                 axios.get(`/grandset/api/grandset_series/${this.objectId}`)
                     .then(resp => {
+                        this.name = resp.data.name;
+                        this.date_start = resp.data.date_start;
+                        this.date_end = resp.data.date_end;
                         this.activities = resp.data.activities;
                         this.groups = resp.data.groups;
                         this.grandSets = resp.data.grand_sets;
@@ -167,3 +269,10 @@ export default {
     },
 };
 </script>
+
+<style>
+.first-line {
+    background-color: rgba(255, 255, 255, 0.877);
+    border-bottom: 2px rgb(180, 180, 180) solid;
+}
+</style>

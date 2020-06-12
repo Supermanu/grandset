@@ -133,6 +133,9 @@ class GrandSetSeriesModel(models.Model):
     necessarily occur at every Grand Set.
     """
 
+    name = models.CharField(max_length=100)
+    date_start = models.DateField()
+    date_end = models.DateField(null=True, blank=True)
     groups = models.ManyToManyField(GroupModel)
     activities = models.ManyToManyField(ActivityModel)
     grand_sets = models.ManyToManyField(GrandSetModel)

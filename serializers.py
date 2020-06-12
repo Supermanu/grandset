@@ -19,6 +19,8 @@
 
 from rest_framework import serializers
 
+from core.models import ResponsibleModel
+from core.serializers import ResponsibleSerializer
 from . import models
 
 
@@ -29,6 +31,15 @@ class GrandSetSettingsSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
+    responsibles = ResponsibleSerializer(read_only=True, many=True)
+    responsibles_id = serializers.PrimaryKeyRelatedField(
+        queryset=ResponsibleModel.objects.all(),
+        source='responsibles',
+        required=False,
+        allow_null=True,
+        many=True
+    )
+
     class Meta:
         model = models.ActivityModel
         fields = "__all__"
@@ -64,6 +75,23 @@ class GrandSetSerializer(serializers.ModelSerializer):
 
 
 class GrandSetSeriesSerializer(serializers.ModelSerializer):
+    activities = ActivitySerializer(read_only=True, many=True)
+    activities_id = serializers.PrimaryKeyRelatedField(
+        queryset=models.ActivityModel.objects.all(),
+        source='activities',
+        required=False,
+        allow_null=True,
+        many=True
+    )
+    groups = GroupSerializer(read_only=True, many=True)
+    groups_id = serializers.PrimaryKeyRelatedField(
+        queryset=models.GroupModel.objects.all(),
+        source='groups',
+        required=False,
+        allow_null=True,
+        many=True
+    )
+
     class Meta:
         model = models.GrandSetSeriesModel
         fields = "__all__"

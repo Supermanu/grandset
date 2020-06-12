@@ -48,12 +48,20 @@
                 </b-input-group>
                 <b-list-group class="pt-1">
                     <b-list-group-item
-                        button
                         v-for="(activity, index) in filteredActivities"
                         :key="activity.id"
-                        @click="addActivity(index)"
+                        class="d-flex justify-content-between"
                     >
                         {{ activity.activity_name }}
+                        <span>
+                            <b-btn
+                                size="sm"
+                                variant="primary"
+                                @click="addActivity(index)"
+                            >
+                                <b-icon icon="arrow-right" />
+                            </b-btn>
+                        </span>
                     </b-list-group-item>
                 </b-list-group>
             </b-col>
@@ -70,12 +78,27 @@
                 </div>
                 <b-list-group class="pt-1">
                     <b-list-group-item
-                        button
                         v-for="(activity, index) in value"
                         :key="activity.id"
-                        @click="removeActivity(index)"
+                        class="d-flex justify-content-between"
                     >
+                        <span>
+                            <b-btn
+                                size="sm"
+                                variant="primary"
+                                @click="removeActivity(index)"
+                            >
+                                <b-icon icon="arrow-left" />
+                            </b-btn>
+                        </span>
                         {{ activity.activity_name }}
+                        <b-btn
+                            size="sm"
+                            variant="outline-secondary"
+                            @click="openModal(activity)"
+                        >
+                            <b-icon icon="pencil-square" />
+                        </b-btn>
                     </b-list-group-item>
                 </b-list-group>
             </b-col>
@@ -85,21 +108,25 @@
             size="lg"
             cancel-title="Annuler"
             :ok-title="'id' in newActivity ? 'Modifier' : 'Ajouter'"
+            @ok="submit"
             @hidden="resetNewActivity"
         >
             <b-form-row>
                 <b-col>
                     <b-form-group
                         label="Nom de l'activité"
+                        :state="inputStates.activity_name"
                     >
                         <b-input
                             type="text"
                             v-model="newActivity.activity_name"
                         />
+                        <span slot="invalid-feedback">{{ errorMsg("activity_name") }}</span>
                     </b-form-group>
                     <b-form-group
                         label="Nombre maximum de participants"
                         description="Le nombre de groupe maximum que l'activité peut acceuillir."
+                        :state="inputStates.max_participant"
                     >
                         <b-input-group>
                             <b-input-group-prepend>
@@ -115,6 +142,7 @@
                                 v-model="newActivity.max_participant"
                             />
                         </b-input-group>
+                        <span slot="invalid-feedback">{{ errorMsg("max_participant") }}</span>
                     </b-form-group>
                     <b-form-group
                         label="Nombre de participation recommandé"
@@ -134,10 +162,12 @@
                                 v-model="newActivity.recommended_participation"
                             />
                         </b-input-group>
+                        <span slot="invalid-feedback">{{ errorMsg("recommended_participation") }}</span>
                     </b-form-group>
                     <b-form-group
                         label="Temps moyen de l'activité"
                         description="Le temps moyen qu'un groupe met pour faire l'activité."
+                        :state="inputStates.average_time"
                     >
                         <b-input-group>
                             <b-input-group-prepend>
@@ -157,14 +187,41 @@
                                 </b-input-group-text>
                             </b-input-group-append>
                         </b-input-group>
+                        <span slot="invalid-feedback">{{ errorMsg("average_time") }}</span>
+                    </b-form-group>
+                    <b-form-group
+                        label="Responsable(s)"
+                        :state="inputStates.responsibles"
+                    >
+                        <multiselect
+                            id="responsible"
+                            :internal-search="false"
+                            :options="responsibleOptions"
+                            @search-change="getResponsible"
+                            placeholder="Un ou plusieurs responsables"
+                            select-label=""
+                            selected-label="Sélectionné"
+                            deselect-label="Cliquer dessus pour enlever"
+                            v-model="newActivity.responsibles"
+                            label="display"
+                            track-by="matricule"
+                            :show-no-options="false"
+                            multiple
+                        >
+                            <span slot="noResult">Aucun responsable trouvé.</span>
+                            <span slot="noOptions" />
+                        </multiselect>
+                        <span slot="invalid-feedback">{{ errorMsg('responsibles') }}</span>
                     </b-form-group>
                     <b-form-group
                         label="Description"
+                        :state="inputStates.description"
                     >
                         <quill-editor
                             v-model="newActivity.description"
                             :options="editorOptions"
                         />
+                        <span slot="invalid-feedback">{{ errorMsg("description") }}</span>
                     </b-form-group>
                 </b-col>
             </b-form-row>
@@ -182,6 +239,10 @@ import {quillEditor} from "vue-quill-editor";
 import "quill/dist/quill.core.css";
 import "quill/dist/quill.snow.css";
 
+import {getPeopleByName} from "assets/common/search.js";
+
+const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+
 export default {
     props: {
         series: {
@@ -198,7 +259,7 @@ export default {
             default: () => [],
         },
     },
-    data() {
+    data: function () {
         return {
             availActivities: [],
             search: "",
@@ -208,7 +269,10 @@ export default {
                 max_participant: 5,
                 recommended_participation: 8,
                 average_time: 20,
+                responsibles: [],
             },
+            responsibleOptions: [],
+            searchId: -1,
             editorOptions: {
                 modules: {
                     toolbar: [
@@ -222,7 +286,33 @@ export default {
                 },
                 placeholder: ""
             },
+            errors: {},
+            /** List of input error states. */
+            inputStates: {
+                activity_name: null,
+                description: null,
+                max_participant: null,
+                recommended_participation: null,
+                average_time: null,
+                responsibles: null,
+            },
         };
+    },
+    watch: {
+        /**
+         * Handle returned errors states.
+         * 
+         * @param {Object} newErrors Errors states with error message.
+         */
+        errors: function (newErrors) {
+            Object.keys(this.inputStates).forEach(key => {
+                if (key in newErrors) {
+                    this.inputStates[key] = newErrors[key].length == 0;
+                } else {
+                    this.inputStates[key] = null;
+                }
+            });
+        },
     },
     computed: {
         filteredActivities() {
@@ -234,16 +324,87 @@ export default {
         },
     },
     methods: {
-        addActivity(index) {
+        openModal: function (activity) {
+            const modalActivity = Object.assign({}, activity);
+            modalActivity.average_time = modalActivity.average_time.slice(3,5);
+            this.newActivity = modalActivity;
+            this.$bvModal.show("creation-modal");
+        },
+        getResponsible: function (searchQuery) {
+            this.searchId += 1;
+            let currentSearch = this.searchId;
+
+            const teachings = this.$store.state.settings.teachings.filter(
+                // eslint-disable-next-line no-undef
+                value => user_properties.teaching.includes(value));
+            getPeopleByName(searchQuery, teachings, "responsible")
+                .then( (resp) => {
+                // Avoid that a previous search overwrites a faster following search results.
+                    if (this.searchId !== currentSearch)
+                        return;
+                    this.responsibleOptions = resp.data;
+                // this.searching = false;
+                })
+                .catch( (err) => {
+                    alert(err);
+                // this.searching = false;
+                });
+        },
+        /** 
+         * Assign text error if any.
+         * 
+         * @param {String} err Field name.
+         */
+        errorMsg(err) {
+            if (err in this.errors) {
+                return this.errors[err][0];
+            } else {
+                return "";
+            }
+        },
+        submit: function (evt) {
+            evt.preventDefault();
+
+            const data = Object.assign({}, this.newActivity);
+            data.responsibles_id = data.responsibles.map(r => r.pk);
+            data.average_time = `${data.average_time}:00`;
+
+            const isModif = "id" in this.newActivity;
+            let url = "/grandset/api/activity/";
+            if (isModif) url += `${this.newActivity.id}/`;
+            const send = isModif ? axios.put : axios.post;
+
+            send(url, data, token).then(resp => {
+                if (!isModif) {
+                    this.$emit("input", this.value.concat(resp.data));
+                    this.$emit("update");
+                } else {
+                    const updatedActivities = this.value.map(a => {
+                        if (a.id == resp.data.id) a = resp.data;
+                    });
+                    this.$emit("input", updatedActivities);
+                }
+                this.$nextTick(() => {
+                    this.$bvModal.hide("creation-modal");
+                });
+            })
+                .catch(err => {
+                    this.errors = err.response.data;
+                });
+        },
+        addActivity: function (index) {
             const activity = this.availActivities.splice(index, 1);
             this.$emit("input", this.value.concat(activity));
+            this.$emit("update");
         },
-        removeActivity(index) {
+        removeActivity: function (index) {
             this.availActivities.unshift(this.value[index]);
             this.$emit("input", this.value.filter((v, i) => i != index));
+            this.$emit("update");
         },
-        resetNewActivity() {
+        resetNewActivity: function () {
             Object.assign(this.$data.newActivity, this.$options.data().newActivity);
+            if ("id" in this.newActivity) delete this.newActivity.id;
         }
     },
     mounted () {

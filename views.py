@@ -119,6 +119,7 @@ class GrandSetViewSet(BaseViewSet):
 class GrandSetSeriesViewSet(BaseViewSet):
     queryset = models.GrandSetSeriesModel.objects.all()
     serializer_class = serializers.GrandSetSeriesSerializer
+    filterset_fields = ["grand_sets"]
 
 
 class ActivityStatAPI(APIView):

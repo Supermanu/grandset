@@ -22,7 +22,7 @@
         <b-container>
             <b-row class="justify-content-md-center m-2">
                 <b-col md="8">
-                    <b-input-group>
+                    <b-input-group class="mb-2">
                         <b-form-input
                             placeholder="Rechercher une activité"
                             v-model="search"
@@ -35,18 +35,32 @@
                         </template>
                     </b-input-group>
                 </b-col>
+                <b-col
+                    md="3"
+                    align-h="end"
+                >
+                    <b-dropdown
+                        variant="outline-secondary"
+                        block
+                        no-caret
+                    >
+                        <template v-slot:button-content>
+                            <b-icon icon="list" />
+                            Gestion
+                        </template>
+                        <b-dropdown-item href="#">Gestion du Grand Set</b-dropdown-item>
+                        <b-dropdown-item :to="`/grand_set_series/${grandSetSerieId}/`">Gestion de la série</b-dropdown-item>
+                    </b-dropdown>
+                </b-col>
             </b-row>
             <b-row>
                 <b-col>
                     <b-card-group columns>
-                        <activity-overview
-                            :grand-set="grandset"
-                        />
+                        <activity-overview />
                         <activity-overview
                             v-for="activity in filteredActivities"
                             :key="activity.id"
                             :activity="activity"
-                            :grand-set="grandSet"
                             ref="activities"
                         />
                     </b-card-group>
@@ -70,16 +84,17 @@ Vue.use(IconsPlugin);
 
 export default {
     props: {
-        grandSet: {
+        grandSetId: {
             type: String,
             default: "-1",
         }
     },
     data: function () {
         return {
-            grandset: null,
+            grandSet: null,
             activities: [],
             search: "",
+            grandSetSerieId: "-1",
         };
     },
     computed: {
@@ -91,17 +106,41 @@ export default {
             });
         },
     },
-    mounted: function () {
-        // eslint-disable-next-line no-undef
-        this.grandset = last_grandset;
-        if (this.grandset) {
-            const promiseActivities = this.grandset.activities.map(activity => {
+    methods: {
+        /** Get activities objects from the Grand Set. */
+        getActivities: function () {
+            const promiseActivities = this.grandSet.activities.map(activity => {
                 return axios.get(`/grandset/api/activity/${activity}/`);
             });
 
             Promise.all(promiseActivities)
                 .then(resps => {
                     this.activities = resps.map(r => r.data);
+                });
+        },
+        /** Get Grand Set serie id. */
+        getGrandSetSerie: function () {
+            axios.get(`/grandset/api/grandset_series/?grand_set=${this.grandSetId}`)
+                .then(resp => {
+                    if (!resp.data.results) return;
+
+                    this.grandSetSerieId = resp.data.results[0].id;
+                });
+        }
+    },
+    mounted: function () {
+        console.log(this.grandSetId);
+        // eslint-disable-next-line no-undef
+        this.grandSet = last_grandset && last_grandset.id == this.grandSetId ? last_grandset : null;
+        this.getGrandSetSerie();
+        if (this.grandSet) {
+            this.getActivities();
+        } else {
+            // First get grand set data.
+            axios.get(`/grandset/api/grand_set/${this.grandSetId}/`)
+                .then(resp => {
+                    this.grandSet = resp.data;
+                    this.getActivities();
                 });
         }
         

@@ -50,6 +50,7 @@ export default new VueRouter({
         {
             path: "/grand_set/:grandSetId/",
             component: GrandSet,
+            props: true
         },
         {
             path: "/activitychange/:grandSetId/:groupId/:activityLogId/",
