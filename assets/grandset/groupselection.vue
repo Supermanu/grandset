@@ -48,40 +48,130 @@
                 </b-input-group>
                 <b-list-group class="pt-1">
                     <b-list-group-item
-                        button
                         v-for="(group, index) in filteredGroups"
                         :key="group.id"
-                        @click="addGroup(index)"
+                        class="d-flex justify-content-between"
                     >
-                        {{ group.group_name }}:
-                        <small>
-                            {{ group.students_display.join(", ") }}
-                        </small>
+                        <span>
+                            {{ group.group_name }}:
+                            <small>
+                                {{ group.students_display.join(", ") }}
+                            </small>
+                        </span>
+                        <span>
+                            <b-btn
+                                size="sm"
+                                variant="primary"
+                                @click="addGroup(index)"
+                            >
+                                <b-icon icon="arrow-right" />
+                            </b-btn>
+                        </span>
                     </b-list-group-item>
                 </b-list-group>
             </b-col>
             <b-col>
                 <h5>Groupes sélectionnés</h5>
-                <b-list-group>
+                <div class="text-right">
+                    <b-btn
+                        variant="outline-success"
+                        v-b-modal.creation-group-modal
+                    >
+                        <b-icon icon="plus" />
+                        Créer un groupe
+                    </b-btn>
+                </div>
+                <b-list-group class="pt-1">
                     <b-list-group-item
-                        button
                         v-for="(group, index) in value"
                         :key="group.id"
-                        @click="removeGroup(index)"
+                        class="d-flex justify-content-between"
                     >
-                        {{ group.group_name }}:
-                        <small>
-                            {{ group.students_display.join(", ") }}
-                        </small>
+                        <span>
+                            <b-btn
+                                size="sm"
+                                variant="primary"
+                                @click="removeGroup(index)"
+                            >
+                                <b-icon icon="arrow-left" />
+                            </b-btn>
+                        </span>
+                        <span class="p-1"> 
+                            {{ group.group_name }}:
+                            <small>
+                                {{ group.students_display.join(", ") }}
+                            </small>
+                        </span>
+                        <b-btn
+                            size="sm"
+                            variant="outline-secondary"
+                            @click="openModal(group)"
+                        >
+                            <b-icon icon="pencil-square" />
+                        </b-btn>
                     </b-list-group-item>
                 </b-list-group>
             </b-col>
         </b-row>
+        <b-modal
+            id="creation-group-modal"
+            size="lg"
+            cancel-title="Annuler"
+            :ok-title="'id' in newGroup ? 'Modifier' : 'Ajouter'"
+            @ok="submit"
+            @hidden="resetNewGroup"
+        >
+            <b-form-row>
+                <b-col>
+                    <b-form-group
+                        label="Nom du groupe"
+                        :state="inputStates.group_name"
+                    >
+                        <b-input
+                            type="text"
+                            v-model="newGroup.group_name"
+                        />
+                        <span slot="invalid-feedback">{{ errorMsg("group_name") }}</span>
+                    </b-form-group>
+                    <b-form-group
+                        label="Étudiants"
+                        :state="inputStates.students"
+                    >
+                        <multiselect
+                            id="student"
+                            :internal-search="false"
+                            :options="studentOptions"
+                            @search-change="getStudent"
+                            placeholder="Un ou plusieurs étudiants"
+                            select-label=""
+                            selected-label="Sélectionné"
+                            deselect-label="Cliquer dessus pour enlever"
+                            v-model="newGroup.students"
+                            label="display"
+                            track-by="matricule"
+                            :show-no-options="false"
+                            multiple
+                        >
+                            <span slot="noResult">Aucun étudiant trouvé.</span>
+                            <span slot="noOptions" />
+                        </multiselect>
+                        <span slot="invalid-feedback">{{ errorMsg('students') }}</span>
+                    </b-form-group>
+                </b-col>
+            </b-form-row>
+        </b-modal>
     </div>
 </template>
 
 <script>
 import axios from "axios";
+
+import Multiselect from "vue-multiselect";
+import "vue-multiselect/dist/vue-multiselect.min.css";
+
+import {getPeopleByName} from "assets/common/search.js";
+
+const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
 
 export default {
     props: {
@@ -95,11 +185,39 @@ export default {
             default: true,
         },
     },
-    data() {
+    data: function () {
         return {
             availGroup: [],
-            search: ""
+            search: "",
+            newGroup: {
+                group_name: "",
+                students: [],
+            },
+            studentOptions: [],
+            searchId: -1,
+            errors: {},
+            /** List of input error states. */
+            inputStates: {
+                group_name: null,
+                students: null,
+            }
         };
+    },
+    watch: {
+        /**
+         * Handle returned errors states.
+         * 
+         * @param {Object} newErrors Errors states with error message.
+         */
+        errors: function (newErrors) {
+            Object.keys(this.inputStates).forEach(key => {
+                if (key in newErrors) {
+                    this.inputStates[key] = newErrors[key].length == 0;
+                } else {
+                    this.inputStates[key] = null;
+                }
+            });
+        },
     },
     computed: {
         filteredGroups: function () {
@@ -113,13 +231,94 @@ export default {
         },
     },
     methods: {
-        addGroup(index) {
+        openModal: function (group) {
+            const modalGroup = Object.assign({}, group);
+            this.newGroup = modalGroup;
+            this.$bvModal.show("creation-group-modal");
+        },
+        getStudent: function (searchQuery) {
+            this.searchId += 1;
+            let currentSearch = this.searchId;
+
+            const teachings = this.$store.state.settings.teachings.filter(
+                // eslint-disable-next-line no-undef
+                value => user_properties.teaching.includes(value));
+            getPeopleByName(searchQuery, teachings, "student")
+                .then((resp) => {
+                // Avoid that a previous search overwrites a faster following search results.
+                    if (this.searchId !== currentSearch)
+                        return;
+                    this.studentOptions = resp.data.map(option => {
+                        if (this.value.find(group => group.students_id.includes(option.matricule))) {
+                            option.$isDisabled = true;
+                        }
+                        return option;
+                    });
+                // this.searching = false;
+                })
+                .catch( (err) => {
+                    alert(err);
+                // this.searching = false;
+                });
+        },
+        /** 
+         * Assign text error if any.
+         * 
+         * @param {String} err Field name.
+         */
+        errorMsg(err) {
+            if (err in this.errors) {
+                return this.errors[err][0];
+            } else {
+                return "";
+            }
+        },
+        addGroup(groupToAdd) {
+            const index = this.availGroup.findIndex(g => g.id === groupToAdd.id);
             const group = this.availGroup.splice(index, 1);
             this.$emit("input", this.value.concat(group));
+            this.$emit("update");
         },
-        removeGroup(index) {
+        removeGroup(groupToRemove) {
+            const index = this.availGroup.findIndex(g => g.id === groupToRemove.id);
             this.availGroup.unshift(this.value[index]);
             this.$emit("input", this.value.filter((v, i) => i != index));
+            this.$emit("update");
+        },
+        submit: function (evt) {
+            evt.preventDefault();
+
+            const data = Object.assign({}, this.newGroup);
+            data.students_id = data.students.map(r => r.matricule);
+
+            const isModif = "id" in this.newGroup;
+            let url = "/grandset/api/group/";
+            if (isModif) url += `${this.newGroup.id}/`;
+            const send = isModif ? axios.put : axios.post;
+
+            send(url, data, token).then(resp => {
+                if (!isModif) {
+                    this.$emit("input", this.value.concat(resp.data));
+                    this.$emit("update");
+                } else {
+                    const updatedGroups = this.value.map(a => {
+                        if (a.id == resp.data.id) a = resp.data;
+                        return a;
+                    });
+                    console.log(updatedGroups);
+                    this.$emit("input", updatedGroups);
+                }
+                this.$nextTick(() => {
+                    this.$bvModal.hide("creation-group-modal");
+                });
+            })
+                .catch(err => {
+                    this.errors = err.response.data;
+                });
+        },
+        resetNewGroup: function () {
+            Object.assign(this.$data.newGroup, this.$options.data().newGroup);
+            if ("id" in this.newGroup) delete this.newGroup.id;
         }
     },
     mounted () {
@@ -132,5 +331,8 @@ export default {
                 });
         }
     },
+    components: {
+        Multiselect
+    }
 };
 </script>

@@ -42,10 +42,24 @@ export default new VueRouter({
                 }
             }
         },
+        // {
+        //     path: "/grand_set_series/",
+        //     component: GrandSetSeries,
+        //     props: true
+        // },
         {
-            path: "/grand_set_series/:objectId/",
+            path: "/grand_set_series_creation/:objectId/",
             component: GrandSetCreation,
             props: true
+        },
+        {
+            path: "/grand_set_creation/:grandSetSeriesId/:objectId/",
+            component: GrandSetCreation,
+            props: (route) => {
+                const props = {...route.params };
+                props.series = false;
+                return props;
+            }
         },
         {
             path: "/grand_set/:grandSetId/",

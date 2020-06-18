@@ -32,7 +32,14 @@
             <b-row class="sticky-top p-2 first-line">
                 <b-col>
                     <b-btn to="/">
-                        Retour à la liste des Grand Sets
+                        Retour
+                    </b-btn>
+                    <b-btn
+                        v-if="!series && objectId !== '-1'"
+                        variant="secondary"
+                        :to="`/grand_set/${objectId}/`"
+                    >
+                        Vers le Grand Set
                     </b-btn>
                 </b-col>
                 <b-col
@@ -50,7 +57,7 @@
             </b-row>
             <b-row>
                 <b-col>
-                    <b-form-row>
+                    <b-form-row v-if="series">
                         <b-col>
                             <b-form-group
                                 label="Nom de la série"
@@ -65,7 +72,7 @@
                             </b-form-group>
                         </b-col>
                     </b-form-row>
-                    <b-form-row>
+                    <b-form-row v-if="series">
                         <b-col>
                             <b-form-group
                                 label="Date début"
@@ -93,41 +100,83 @@
                             </b-form-group>
                         </b-col>
                     </b-form-row>
+                    <b-form-row v-else>
+                        <b-col>
+                            <b-form-group
+                                label="Date début"
+                                :state="inputStates.date"
+                            >
+                                <b-form-input
+                                    type="date"
+                                    v-model="date"
+                                    @update="hasChanged = true"
+                                />
+                                <span slot="invalid-feedback">{{ errorMsg("date") }}</span>
+                            </b-form-group>
+                        </b-col>
+                    </b-form-row>
                 </b-col>
             </b-row>
-            <b-row
+            <div
                 v-if="ready && series"
                 class="mb-4"
             >
-                <b-col>
-                    <h5>Grand Sets de la série</h5>
-                    <b-card
-                        no-body
-                        v-for="gs in grandSets"
-                        :key="gs.id"
-                    >
-                        <b-card-text class="p-1">
-                            <b-row>
-                                <b-col>
-                                    <strong>{{ gs.date }}</strong>
-                                </b-col>
-                                <b-col class="text-right">
-                                    <b-btn
-                                        :to="`/grand_set/${gs.id}`"
-                                        size="sm"
-                                        variant="outline-primary"
-                                    >
-                                        Vers le grand set
-                                        <b-icon
-                                            icon="chevron-right"
-                                        />
-                                    </b-btn>
-                                </b-col>
-                            </b-row>
-                        </b-card-text>
-                    </b-card>
-                </b-col>
-            </b-row>
+                <b-row>
+                    <b-col>
+                        <h5>Grand Sets de la série</h5>
+                    </b-col>
+                </b-row>
+                <b-row
+                    class="mb-2"
+                >
+                    <b-col>
+                        <b-btn
+                            :to="`/grand_set_creation/${objectId}/-1/`"
+                            variant="success"
+                            :disabled="objectId === '-1'"
+                        >
+                            <b-icon
+                                icon="plus"
+                            />
+                            <span v-if="objectId !== '-1'">
+                                Ajouter un grand set
+                            </span>
+                            <span v-else>
+                                Enregistrer avant d'ajouter un grand set
+                            </span>
+                        </b-btn>
+                    </b-col>
+                </b-row>
+                <b-row>
+                    <b-col>
+                        <b-card
+                            no-body
+                            v-for="gs in grandSets"
+                            :key="gs.id"
+                        >
+                            <b-card-text class="p-1">
+                                <b-row>
+                                    <b-col>
+                                        <strong>{{ gs.date }}</strong>
+                                    </b-col>
+                                    <b-col class="text-right">
+                                        <b-btn
+                                            :to="`/grand_set/${gs.id}/`"
+                                            size="sm"
+                                            variant="outline-primary"
+                                        >
+                                            Vers le grand set
+                                            <b-icon
+                                                icon="chevron-right"
+                                            />
+                                        </b-btn>
+                                    </b-col>
+                                </b-row>
+                            </b-card-text>
+                        </b-card>
+                    </b-col>
+                </b-row>
+            </div>
             <b-row
                 v-if="ready"
                 class="mb-4"
@@ -139,10 +188,11 @@
                     />
                 </b-col>
             </b-row>
-            <b-row v-if="ready">
+            <b-row v-if="ready && series">
                 <b-col>
                     <group-selection
                         v-model="groups"
+                        @update="hasChanged = true"
                     />
                 </b-col>
             </b-row>
@@ -168,19 +218,26 @@ export default {
             type: String,
             default: "-1"
         },
+        grandSetSeriesId: {
+            type: String,
+            default: "-1"
+        }
     },
     data: function () {
         return {
             name: "",
+            date: null,
             date_start: null,
             date_end: null,
             activities: [],
             groups: [],
             grandSets: [],
+            grandSetSerie: null,
             ready: false,
             hasChanged: false,
             inputStates: {
                 name: null,
+                date: null,
                 date_start: null,
                 date_end: null,
                 activities: null,
@@ -208,6 +265,9 @@ export default {
                 }
             });
         },
+        series: function () {
+            this.initComponent();
+        }
     },
     methods: {
         /** 
@@ -224,49 +284,119 @@ export default {
         },
         /** Submit Grand Set Serie data to the server. */
         submit: function () {
-            const data = {
+            const data = this.series ? {
                 name: this.name,
                 date_start: this.date_start,
                 date_end: this.date_end,
                 activities_id: this.activities.map(a => a.id),
                 groups_id: this.groups.map(g => g.id),
-            };
+            } :
+                {
+                    date: this.date,
+                    activities_id: this.activities.map(a => a.id),
+                };
 
-            let url = "/grandset/api/grandset_series/";
-            if (this.objectId !== "-1") url += `${this.objectId}/`;
+            const isNewObj = this.objectId === "-1";
+            let url = "/grandset/api/grandset";
+            url = this.series ? url + "_series/" : url + "/";
+            if (!isNewObj) url += `${this.objectId}/`;
 
-            const send = this.objectId !== "-1" ? axios.put : axios.post;
+            const send = isNewObj ? axios.post : axios.put;
             send(url, data, token)
-                .then(() => {
-                    this.$root.$bvToast.toast("Les données ont bien été sauvegardée", {
-                        variant: "success",
-                        noCloseButton: true,
-                    });
+                .then(resp => {
+                    if (!this.series) {
+                        // Update last_grandset variable if needed.
+                        // eslint-disable-next-line no-undef
+                        if (last_grandset.id === resp.data.id) {
+                            // eslint-disable-next-line no-undef
+                            last_grandset = resp.data;
+                        }
+                    }
+                    if (isNewObj && !this.series) {
+                        this.grandSetSerie.grand_sets_id.push(resp.data.id);
+                        axios.put(`/grandset/api/grandset_series/${this.grandSetSeriesId}/`, this.grandSetSerie, token)
+                            .then(() => {
+                                const path = `/grand_set/${resp.data.id}/`;
+                                this.$router.push(path, () => {
+                                    this.$root.$bvToast.toast("Les données ont bien été sauvegardées", {
+                                        variant: "success",
+                                        noCloseButton: true,
+                                    });
+                                });
+                            });
+                    } else if (isNewObj) {
+                        const path = `/grand_set_series_creation/${resp.data.id}/`;
+                        this.$router.push(path, () => {
+                            this.$root.$bvToast.toast("Les données ont bien été sauvegardées", {
+                                variant: "success",
+                                noCloseButton: true,
+                            });
+                        });
+                    } else {
+                        this.$root.$bvToast.toast("Les données ont bien été sauvegardées", {
+                            variant: "success",
+                            noCloseButton: true,
+                        });
+                    }
                     this.hasChanged = false;
                 })
                 .catch(err => {
                     this.errors = err.response.data;
                 });
-        }
-    },
-    mounted () {
-        if (this.series) {
-            if (this.objectId) {
-                axios.get(`/grandset/api/grandset_series/${this.objectId}`)
-                    .then(resp => {
-                        this.name = resp.data.name;
-                        this.date_start = resp.data.date_start;
-                        this.date_end = resp.data.date_end;
-                        this.activities = resp.data.activities;
-                        this.groups = resp.data.groups;
-                        this.grandSets = resp.data.grand_sets;
-                        this.ready = true;
-                    });
+        },
+        initComponent: function () {
+            if (this.series) {
+                if (this.objectId) {
+                    axios.get(`/grandset/api/grandset_series/${this.objectId}`)
+                        .then(resp => {
+                            this.name = resp.data.name;
+                            this.date_start = resp.data.date_start;
+                            this.date_end = resp.data.date_end;
+                            this.activities = resp.data.activities;
+                            this.groups = resp.data.groups;
+                            this.grandSets = resp.data.grand_sets;
+                            this.ready = true;
+                        });
+                } else {
+                    this.ready = true;
+                }
             } else {
-                this.ready = true;
+                if (this.objectId !== "-1") {
+                    const prom = [
+                        axios.get(`/grandset/api/grandset/${this.objectId}/`),
+                        axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}/`),
+                    ];
+                    Promise.all(prom)
+                        .then(resps => {
+                            this.date = resps[0].data.date;
+                            this.activities = resps[0].data.activities;
+                            this.groups = resps[0].data.groups;
+                            this.grandSetSerie = resps[1].data;
+
+                            this.ready = true;
+                        });
+                } else {
+                    axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}/`)
+                        .then(resp => {
+                            this.grandSetSerie = resp.data;
+                            this.activities = this.grandSetSerie.activities;
+                            this.ready = true;
+                        });
+                }
             }
         }
     },
+    mounted: function () {
+        this.initComponent();
+    },
+    beforeRouteLeave (to, from, next) {
+        if (this.hasChanged && this.objectId !== "-1") {
+            if (!confirm("Des données n'ont pas été enregistrées, êtes-vous sûr de vouloir quitter la page ?")) {
+                next(false);
+            }
+        }
+        next();
+    }
 };
 </script>
 

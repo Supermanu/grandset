@@ -31,7 +31,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from django.views.generic import TemplateView
 from django.db.models import Count
 
-from core.views import get_app_settings, PageNumberSizePagination
+from core.views import get_app_settings, LargePageSizePagination
 from core.utilities import get_menu
 
 from . import models, serializers
@@ -76,7 +76,7 @@ class GrandSetView(
 
 class BaseViewSet(ModelViewSet):
     permission_classes = [DjangoModelPermissions]
-    pagination_class = PageNumberSizePagination
+    pagination_class = LargePageSizePagination
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
 
 
@@ -168,9 +168,9 @@ class GroupWithoutActivityAPI(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, grand_set, format=None):
-        print(grand_set)
         running_groups = models.ActivityLogModel.objects \
             .filter(grand_set=grand_set) \
             .values_list("group", flat=True)
-        groups = models.GroupModel.objects.exclude(pk__in=running_groups)
+        grand_set_series_group = models.GrandSetSeriesModel.objects.get(grand_sets=grand_set).groups.all()
+        groups = grand_set_series_group.exclude(pk__in=running_groups)
         return Response(serializers.GroupSerializer(groups, many=True).data)

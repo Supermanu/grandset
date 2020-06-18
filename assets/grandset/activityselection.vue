@@ -70,7 +70,7 @@
                 <div class="text-right">
                     <b-btn
                         variant="outline-success"
-                        v-b-modal.creation-modal
+                        v-b-modal.creation-activity-modal
                     >
                         <b-icon icon="plus" />
                         Créer une activité
@@ -104,7 +104,7 @@
             </b-col>
         </b-row>
         <b-modal
-            id="creation-modal"
+            id="creation-activity-modal"
             size="lg"
             cancel-title="Annuler"
             :ok-title="'id' in newActivity ? 'Modifier' : 'Ajouter'"
@@ -328,7 +328,7 @@ export default {
             const modalActivity = Object.assign({}, activity);
             modalActivity.average_time = modalActivity.average_time.slice(3,5);
             this.newActivity = modalActivity;
-            this.$bvModal.show("creation-modal");
+            this.$bvModal.show("creation-activity-modal");
         },
         getResponsible: function (searchQuery) {
             this.searchId += 1;
@@ -376,16 +376,18 @@ export default {
 
             send(url, data, token).then(resp => {
                 if (!isModif) {
+                    console.log(resp.data);
                     this.$emit("input", this.value.concat(resp.data));
                     this.$emit("update");
                 } else {
                     const updatedActivities = this.value.map(a => {
                         if (a.id == resp.data.id) a = resp.data;
+                        return a;
                     });
                     this.$emit("input", updatedActivities);
                 }
                 this.$nextTick(() => {
-                    this.$bvModal.hide("creation-modal");
+                    this.$bvModal.hide("creation-activity-modal");
                 });
             })
                 .catch(err => {

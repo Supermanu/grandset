@@ -48,12 +48,20 @@
                             <b-icon icon="list" />
                             Gestion
                         </template>
-                        <b-dropdown-item href="#">Gestion du Grand Set</b-dropdown-item>
-                        <b-dropdown-item :to="`/grand_set_series/${grandSetSerieId}/`">Gestion de la série</b-dropdown-item>
+                        <b-dropdown-item
+                            :to="`/grand_set_creation/${grandSetSeriesId}/${grandSetId}/`"
+                        >
+                            Gestion des activités
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            :to="`/grand_set_series_creation/${grandSetSeriesId}/`"
+                        >
+                            Gestion de la série
+                        </b-dropdown-item>
                     </b-dropdown>
                 </b-col>
             </b-row>
-            <b-row>
+            <b-row v-if="grandSet">
                 <b-col>
                     <b-card-group columns>
                         <activity-overview />
@@ -94,53 +102,38 @@ export default {
             grandSet: null,
             activities: [],
             search: "",
-            grandSetSerieId: "-1",
+            grandSetSeriesId: "-1",
         };
     },
     computed: {
         filteredActivities: function () {
-            if (this.search === "") return this.activities;
+            if (this.search === "") return this.grandSet.activities;
 
-            return this.activities.filter(a => {
+            return this.grandSet.activities.filter(a => {
                 return a.activity_name.toLowerCase().includes(this.search.toLowerCase());
             });
         },
     },
     methods: {
-        /** Get activities objects from the Grand Set. */
-        getActivities: function () {
-            const promiseActivities = this.grandSet.activities.map(activity => {
-                return axios.get(`/grandset/api/activity/${activity}/`);
-            });
-
-            Promise.all(promiseActivities)
-                .then(resps => {
-                    this.activities = resps.map(r => r.data);
-                });
-        },
         /** Get Grand Set serie id. */
         getGrandSetSerie: function () {
             axios.get(`/grandset/api/grandset_series/?grand_set=${this.grandSetId}`)
                 .then(resp => {
                     if (!resp.data.results) return;
 
-                    this.grandSetSerieId = resp.data.results[0].id;
+                    this.grandSetSeriesId = resp.data.results[0].id;
                 });
         }
     },
     mounted: function () {
-        console.log(this.grandSetId);
         // eslint-disable-next-line no-undef
         this.grandSet = last_grandset && last_grandset.id == this.grandSetId ? last_grandset : null;
         this.getGrandSetSerie();
-        if (this.grandSet) {
-            this.getActivities();
-        } else {
+        if (!this.grandSet) {
             // First get grand set data.
-            axios.get(`/grandset/api/grand_set/${this.grandSetId}/`)
+            axios.get(`/grandset/api/grandset/${this.grandSetId}/`)
                 .then(resp => {
                     this.grandSet = resp.data;
-                    this.getActivities();
                 });
         }
         
