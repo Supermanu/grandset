@@ -181,7 +181,7 @@ export default {
         axios.get(`/grandset/api/grandset/${this.grandSetId}/`)
             .then(respGrandSet => {
                 const promiseActivities = respGrandSet.data.activities.map(activity => {
-                    return axios.get(`/grandset/api/activity/${activity}/`);
+                    return axios.get(`/grandset/api/activity/${activity.id}/`);
                 });
 
                 Promise.all(promiseActivities)
