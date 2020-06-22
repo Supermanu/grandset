@@ -49,7 +49,7 @@
                                 Si nécessaire, vous pouvez évaluer individuellement ci-dessous."
                         >
                             <b-input-group
-                                :append="'/' + $store.state.settings.max_points"
+                                :append="'/ ' + $store.state.settings.max_points"
                             >
                                 <b-form-input
                                     v-model="groupEval"
@@ -77,7 +77,7 @@
                                     label-align-sm="right"
                                 >
                                     <b-input-group
-                                        :append="'/' + $store.state.settings.max_points"
+                                        :append="'/ ' + $store.state.settings.max_points"
                                     >
                                         <b-input-group-prepend is-text>
                                             <b-form-checkbox
