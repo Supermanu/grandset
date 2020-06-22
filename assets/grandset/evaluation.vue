@@ -71,7 +71,7 @@
                             >
                                 <b-form-group 
                                     v-for="(student, index) in group.students"
-                                    :key="student"
+                                    :key="student.matricule"
                                     :label="group.students_display[index]"
                                     label-cols-sm="6"
                                     label-align-sm="right"
