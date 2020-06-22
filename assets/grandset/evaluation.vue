@@ -48,13 +48,18 @@
                             description="Évaluer l'ensemble du groupe.
                                 Si nécessaire, vous pouvez évaluer individuellement ci-dessous."
                         >
-                            <b-form-input
-                                v-model="groupEval"
-                                type="number"
-                                step="0.001"
-                                min="0"
-                                @input="updateIndividual"
-                            />
+                            <b-input-group
+                                :append="'/' + $store.state.settings.max_points"
+                            >
+                                <b-form-input
+                                    v-model="groupEval"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    :max="$store.state.settings.max_points"
+                                    @input="updateIndividual"
+                                />
+                            </b-input-group>
                         </b-form-group>
                         <b-card bg-variant="light">
                             <b-form-group
@@ -71,7 +76,9 @@
                                     label-cols-sm="6"
                                     label-align-sm="right"
                                 >
-                                    <b-input-group>
+                                    <b-input-group
+                                        :append="'/' + $store.state.settings.max_points"
+                                    >
                                         <b-input-group-prepend is-text>
                                             <b-form-checkbox
                                                 switch
@@ -81,8 +88,9 @@
                                         </b-input-group-prepend>
                                         <b-form-input
                                             type="number"
-                                            step="0.001"
+                                            step="0.01"
                                             min="0"
+                                            :max="$store.state.settings.max_points"
                                             v-model="evaluation[index]"
                                             :readonly="!individualEval[index]"
                                         />
@@ -192,7 +200,7 @@ export default {
                 this.individualEval = this.group.students.map(() => hasPreviousEval);
                 this.evaluation = this.group.students.map(student => {
                     if (hasPreviousEval) {
-                        return resps[2].data.results.find(ev => ev.student === student).evaluation;
+                        return resps[2].data.results.find(ev => ev.student === student.matricule).evaluation;
                     }
                     return this.groupEval;
                 });
@@ -205,7 +213,7 @@ export default {
                 this.loading = false;
             })
             .catch(err => {
-                this.console.log(err);
+                console.log(err);
             });
     },
 };
