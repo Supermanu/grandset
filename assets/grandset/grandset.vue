@@ -21,10 +21,13 @@
     <div>
         <b-container>
             <b-row class="justify-content-md-center m-2">
-                <b-col md="8">
+                <b-col md="4">
+                    <h3>{{ date }} : {{ grandSetSeriesName }}</h3>
+                </b-col>
+                <b-col md="5">
                     <b-input-group class="mb-2">
                         <b-form-input
-                            placeholder="Rechercher une activité"
+                            placeholder="Une activité, un groupe ou un élève"
                             v-model="search"
                         />
 
@@ -36,7 +39,7 @@
                     </b-input-group>
                 </b-col>
                 <b-col
-                    md="3"
+                    md="2"
                     align-h="end"
                 >
                     <b-dropdown
@@ -46,7 +49,7 @@
                     >
                         <template v-slot:button-content>
                             <b-icon icon="list" />
-                            Gestion
+                            Options
                         </template>
                         <b-dropdown-item
                             :to="`/grand_set_creation/${grandSetSeriesId}/${grandSetId}/`"
@@ -80,6 +83,8 @@
 
 <script>
 import axios from "axios";
+import Moment from "moment";
+Moment.locale("fr");
 
 import Vue from "vue";
 import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
@@ -100,9 +105,9 @@ export default {
     data: function () {
         return {
             grandSet: null,
-            activities: [],
             search: "",
             grandSetSeriesId: "-1",
+            grandSetSeriesName: ""
         };
     },
     computed: {
@@ -110,9 +115,18 @@ export default {
             if (this.search === "") return this.grandSet.activities;
 
             return this.grandSet.activities.filter(a => {
-                return a.activity_name.toLowerCase().includes(this.search.toLowerCase());
+                const activityOverview = this.$refs.activities.find(aO => aO.activity.id === a.id);
+                const groupAndStudSearch = activityOverview ? activityOverview.hasGroupOrStudent(this.search) : false;
+                const hasActivity = a.activity_name.toLowerCase().includes(this.search.toLowerCase());
+                return groupAndStudSearch || hasActivity;
+                
             });
         },
+        date: function () {
+            if (!this.grandSet) return "";
+
+            return Moment(this.grandSet.date).format("DD/MM/YY");
+        }
     },
     methods: {
         /** Get Grand Set serie id. */
@@ -122,6 +136,7 @@ export default {
                     if (!resp.data.results) return;
 
                     this.grandSetSeriesId = resp.data.results[0].id;
+                    this.grandSetSeriesName = resp.data.results[0].name;
                 });
         }
     },
@@ -143,3 +158,11 @@ export default {
     }
 };
 </script>
+
+<style>
+h3 {
+    font-size: 1.1em;
+    font-weight: bold;
+    padding-top: 0.5em;
+}
+</style>

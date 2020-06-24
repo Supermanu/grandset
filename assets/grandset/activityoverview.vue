@@ -40,12 +40,6 @@
                             >
                                 <b-icon icon="eye-fill" />
                             </b-btn>
-                            <b-btn
-                                size="sm"
-                                variant="danger"
-                            >
-                                <b-icon icon="trash" />
-                            </b-btn>
                         </span>
                     </div>
                 </template>
@@ -146,6 +140,14 @@ export default {
             default:
                 return "";
             }
+        },
+        hasGroupOrStudent: function (query) {
+            const filteredGroups = this.groups.filter(g => {
+                const isInGroupName = g.group_name.toLowerCase().includes(query.toLowerCase());
+                const isInStudentsName = g.students_display.join("").toLowerCase().includes(query.toLowerCase());
+                return isInGroupName || isInStudentsName;
+            });
+            return filteredGroups.length > 0;
         }
     },
     mounted: function () {
