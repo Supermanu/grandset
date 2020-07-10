@@ -20,6 +20,7 @@
 from datetime import timedelta
 
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 
 from core.models import StudentModel, ResponsibleModel, TeachingModel
 
@@ -28,6 +29,10 @@ class GrandSetSettingsModel(models.Model):
     teachings = models.ManyToManyField(TeachingModel)
     return_to_hq = models.BooleanField(default=True)
     max_points = models.PositiveIntegerField(default=20)
+
+
+class CompetenceModel(models.Model):
+    name = models.CharField(max_length=100)
 
 
 class ActivityModel(models.Model):
@@ -41,6 +46,7 @@ class ActivityModel(models.Model):
     average_time = models.DurationField(default=timedelta(minutes=20))
     description = models.TextField(blank=True)
     responsibles = models.ManyToManyField(ResponsibleModel, blank=True)
+    competence = models.ManyToManyField(CompetenceModel, blank=True)
     datetime_creation = models.DateTimeField(auto_now_add=True)
     datetime_update = models.DateTimeField(auto_now=True)
 
@@ -119,7 +125,8 @@ class ActivityEvaluationModel(models.Model):
     """
     activity_log = models.ForeignKey(ActivityLogModel, on_delete=models.CASCADE)
     student = models.ForeignKey(StudentModel, on_delete=models.CASCADE)
-    evaluation = models.DecimalField(max_digits=8, decimal_places=5)
+    evaluation = models.DecimalField(max_digits=8, decimal_places=5, null=True, blank=True)
+    competence_evaluation = JSONField(default=dict)
     datetime_creation = models.DateTimeField(auto_now_add=True)
     datetime_update = models.DateTimeField(auto_now=True)
 

@@ -45,21 +45,57 @@
                             label="Évaluation du groupe"
                             label-cols-sm="4"
                             label-align-sm="center"
+                            label-class="font-weight-bold"
                             description="Évaluer l'ensemble du groupe.
                                 Si nécessaire, vous pouvez évaluer individuellement ci-dessous."
                         >
-                            <b-input-group
-                                :append="'/ ' + $store.state.settings.max_points"
-                            >
-                                <b-form-input
-                                    v-model="groupEval"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    :max="$store.state.settings.max_points"
-                                    @input="updateIndividual"
-                                />
-                            </b-input-group>
+                            <div v-if="useCompetencies">
+                                <b-form-group
+                                    v-for="comp in activity.competence"
+                                    :key="comp.id"
+                                    :label="comp.name"
+                                    label-cols-md="4"
+                                    label-align-md="right"
+                                >
+                                    <b-input-group>
+                                        <b-form-input
+                                            v-model="groupEval[comp.id]"
+                                            type="range"
+                                            min="0"
+                                            max="2"
+                                            @input="updateIndividual(groupEval[comp.id], comp.id)"
+                                        />
+                                        <b-input-group-append
+                                            class="w-50"
+                                        >
+                                            <b-input-group-text
+                                                :class="colorCompletion(groupEval[comp.id])"
+                                            >
+                                                {{ labelCompetence(groupEval[comp.id]) }}
+                                                <b-icon
+                                                    v-if="groupEval[comp.id] === '2'"
+                                                    icon="check"
+                                                    variant="success"
+                                                />
+                                            </b-input-group-text>
+                                        </b-input-group-append>
+                                    </b-input-group>
+                                </b-form-group>
+                            </div>
+                            <div v-else>
+                                <b-input-group
+                                    :append="'/ ' + $store.state.settings.max_points"
+                                >
+                                    <b-form-input
+                                        v-model="groupEval"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        :max="$store.state.settings.max_points"
+                                        @input="updateIndividual"
+                                    />
+                                </b-input-group>
+                            </div>
                         </b-form-group>
                         <b-card bg-variant="light">
                             <b-form-group
@@ -72,29 +108,65 @@
                                 <b-form-group 
                                     v-for="(student, index) in group.students"
                                     :key="student.matricule"
-                                    :label="group.students_display[index]"
-                                    label-cols-sm="6"
+                                    label-cols-sm="3"
                                     label-align-sm="right"
                                 >
-                                    <b-input-group
-                                        :append="'/ ' + $store.state.settings.max_points"
-                                    >
-                                        <b-input-group-prepend is-text>
-                                            <b-form-checkbox
-                                                switch
-                                                class="mr-n2"
-                                                v-model="individualEval[index]"
+                                    <slot name="label">
+                                        <b-form-checkbox
+                                            switch
+                                            class="mr-n2"
+                                            v-model="individualEval[index]"
+                                        >
+                                            {{ group.students_display[index] }}
+                                        </b-form-checkbox>
+                                    </slot>
+                                    <div v-if="useCompetencies">
+                                        <b-form-group
+                                            v-for="comp in activity.competence"
+                                            :key="comp.id"
+                                            :label="comp.name"
+                                            label-cols-md="4"
+                                            label-align-md="right"
+                                        >
+                                            <b-input-group>
+                                                <b-form-input
+                                                    v-model="evaluation[index][comp.id]"
+                                                    type="range"
+                                                    min="0"
+                                                    max="2"
+                                                    :disabled="!individualEval[index]"
+                                                />
+                                                <b-input-group-append
+                                                    class="w-50"
+                                                >
+                                                    <b-input-group-text
+                                                        :class="colorCompletion(evaluation[index][comp.id])"
+                                                    >
+                                                        {{ labelCompetence(evaluation[index][comp.id]) }}
+                                                        <b-icon
+                                                            v-if="evaluation[index][comp.id] === '2'"
+                                                            icon="check"
+                                                            variant="success"
+                                                        />
+                                                    </b-input-group-text>
+                                                </b-input-group-append>
+                                            </b-input-group>
+                                        </b-form-group>
+                                    </div>
+                                    <div v-else>
+                                        <b-input-group
+                                            :append="'/ ' + $store.state.settings.max_points"
+                                        >
+                                            <b-form-input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                :max="$store.state.settings.max_points"
+                                                v-model="evaluation[index]"
+                                                :readonly="!individualEval[index]"
                                             />
-                                        </b-input-group-prepend>
-                                        <b-form-input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            :max="$store.state.settings.max_points"
-                                            v-model="evaluation[index]"
-                                            :readonly="!individualEval[index]"
-                                        />
-                                    </b-input-group>
+                                        </b-input-group>
+                                    </div>
                                 </b-form-group>
                             </b-form-group>
                         </b-card>
@@ -119,7 +191,7 @@
 import axios from "axios";
 
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
-
+const compEvalLabel = ["Non maîtrisé", "Partiellement maîtrisé", "Maîtrisé"];
 export default {
     props: {
         activityLogId: {
@@ -131,43 +203,71 @@ export default {
             default: "-1"
         }
     },
-    data() {
+    data: function () {
         return {
+            useCompetencies: false,
             activityLog: null,
+            activity: null,
             group: null,
             activityEvaluation: [],
             loading: true,
             individualEval: [],
             evaluation: [],
-            groupEval: 20,
+            groupEval: null,
         };
     },
     methods: {
-        updateIndividual: function (value) {
+        colorCompletion: function (compVal) {
+            switch (compVal) {
+            case "1":
+                return "half-completed";
+            case "2":
+                return "completed";
+
+            default:
+                return "";
+            }
+        },
+        labelCompetence: function (compVal) {
+            return compEvalLabel[compVal];
+        },
+        updateIndividual: function (value, compet=null) {
             this.individualEval.forEach((toNotUpdate, index) => {
                 if (toNotUpdate) return;
 
-                this.evaluation[index] = value;
+                if (this.useCompetencies) {
+                    this.evaluation[index][compet] = value;
+                } else {
+                    this.evaluation[index] = value;
+                }
             });
         },
         sendData: function () {
             let evalPromises = [];
             if (this.activityEvaluation.length) {
                 evalPromises = this.activityEvaluation.map((aEv, index) => {
-                    const data = {
+                    let data = {
                         activity_log: this.activityLogId,
-                        student: this.group.students[index],
-                        evaluation: this.evaluation[index],
+                        student: this.group.students_id[index],
                     };
+                    if (this.useCompetencies) {
+                        data.competence_evaluation = this.evaluation[index];
+                    } else {
+                        data.evaluation = this.evaluation[index];
+                    }
                     return axios.put(`/grandset/api/activity_evaluation/${aEv.id}/`, data, token);
                 });
             } else {
                 evalPromises = this.evaluation.map((ev, index) => {
-                    const data = {
+                    let data = {
                         activity_log: this.activityLogId,
-                        student: this.group.students[index],
-                        evaluation: ev,
+                        student: this.group.students_id[index],
                     };
+                    if (this.useCompetencies) {
+                        data.competence_evaluation = ev;
+                    } else {
+                        data.evaluation = ev;
+                    }
                     return axios.post("/grandset/api/activity_evaluation/", data, token);
                 });
             }
@@ -186,7 +286,7 @@ export default {
                 });
         }
     },
-    mounted () {
+    mounted: function () {
         if (this.activityLogId === "-1") return;
 
         const activityLogProm = axios.get(`/grandset/api/activity_log/${this.activityLogId}/`);
@@ -198,19 +298,28 @@ export default {
                 this.group = resps[1].data;
                 const hasPreviousEval = resps[2].data.count > 0;
                 this.individualEval = this.group.students.map(() => hasPreviousEval);
-                this.evaluation = this.group.students.map(student => {
-                    if (hasPreviousEval) {
-                        return resps[2].data.results.find(ev => ev.student === student.matricule).evaluation;
-                    }
-                    return this.groupEval;
-                });
-                if (hasPreviousEval) {
-                    this.activityEvaluation = this.group.students.map(student => {
-                        return resps[2].data.results.find(ev => ev.student === student);
-                    })
-                }
 
-                this.loading = false;
+                axios.get(`/grandset/api/activity/${this.activityLog.activity}/`)
+                    .then(resp => {
+                        this.activity = resp.data;
+                        this.useCompetencies = this.activity.competence.length > 0;
+                        const evalKey = this.useCompetencies ? "competence_evaluation" : "evaluation";
+                        if (this.useCompetencies) {
+                            this.groupEval = this.activity.competence_id.reduce((a,b) => (a[b] = "0", a),{});
+                        }
+                        this.evaluation = this.group.students.map(student => {
+                            if (hasPreviousEval) {
+                                return resps[2].data.results.find(ev => ev.student === student.matricule)[evalKey];
+                            }
+                            return this.groupEval;
+                        });
+                        if (hasPreviousEval) {
+                            this.activityEvaluation = this.group.students.map(student => {
+                                return resps[2].data.results.find(ev => ev.student === student.matricule);
+                            });
+                        }
+                        this.loading = false;
+                    });
             })
             .catch(err => {
                 console.log(err);
@@ -218,3 +327,13 @@ export default {
     },
 };
 </script>
+
+<style>
+.half-completed {
+    background-color: lightyellow;
+}
+
+.completed {
+    background-color: lightgreen;
+}
+</style>

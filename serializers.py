@@ -30,11 +30,26 @@ class GrandSetSettingsSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class CompetenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.CompetenceModel
+        fields = "__all__"
+
+
 class ActivitySerializer(serializers.ModelSerializer):
     responsibles = ResponsibleSerializer(read_only=True, many=True)
     responsibles_id = serializers.PrimaryKeyRelatedField(
         queryset=ResponsibleModel.objects.all(),
         source='responsibles',
+        required=False,
+        allow_null=True,
+        many=True
+    )
+
+    competence = CompetenceSerializer(read_only=True, many=True)
+    competence_id = serializers.PrimaryKeyRelatedField(
+        queryset=models.CompetenceModel.objects.all(),
+        source='competence',
         required=False,
         allow_null=True,
         many=True
