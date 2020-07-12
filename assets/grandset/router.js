@@ -24,6 +24,7 @@ Vue.use(VueRouter);
 
 import GrandSetCreation from "./grandsetcreation.vue";
 import GrandSet from "./grandset.vue";
+import GrandSetSeries from "./grandsetseries.vue";
 import ActivityChange from "./activitychange.vue";
 import ActivityManagement from "./activitymanagement.vue";
 import Evaluation from "./evaluation.vue";
@@ -42,11 +43,11 @@ export default new VueRouter({
                 }
             }
         },
-        // {
-        //     path: "/grand_set_series/",
-        //     component: GrandSetSeries,
-        //     props: true
-        // },
+        {
+            path: "/grand_set_series/",
+            component: GrandSetSeries,
+            props: true
+        },
         {
             path: "/grand_set_series_creation/:objectId/",
             component: GrandSetCreation,

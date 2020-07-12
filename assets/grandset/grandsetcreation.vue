@@ -31,8 +31,8 @@
             </b-row>
             <b-row class="sticky-top p-2 first-line">
                 <b-col>
-                    <b-btn to="/">
-                        Retour
+                    <b-btn to="/grand_set_series/">
+                        Retour aux séries
                     </b-btn>
                     <b-btn
                         v-if="!series && objectId !== '-1'"
