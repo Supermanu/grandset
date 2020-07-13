@@ -36,18 +36,19 @@
                             <b-card-body
                                 class="d-flex justify-content-between"
                             >
-                                <a :href="`#/grand_set_series_creation/${s.id}`">
+                                <a :href="`#/grand_set_series_creation/${s.id}/`">
                                     {{ s.name }}
                                 </a>
                                 <span>
                                     <b-btn
                                         size="sm"
+                                        :to="`/recommendation/${s.id}/`"
                                     >
                                         Recommander une activité
                                     </b-btn>
                                     <b-btn
                                         size="sm"
-                                        :to="`/grand_set_series_creation/${s.id}`"
+                                        :to="`/grand_set_series_creation/${s.id}/`"
                                     >
                                         Modifier
                                     </b-btn>

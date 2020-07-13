@@ -28,6 +28,7 @@ import GrandSetSeries from "./grandsetseries.vue";
 import ActivityChange from "./activitychange.vue";
 import ActivityManagement from "./activitymanagement.vue";
 import Evaluation from "./evaluation.vue";
+import Recommendation from "./recommendation.vue";
 
 export default new VueRouter({
     routes: [
@@ -82,5 +83,10 @@ export default new VueRouter({
             component: Evaluation,
             props: true
         },
+        {
+            path: "/recommendation/:grandSetSeriesId/",
+            component: Recommendation,
+            props: true
+        }
     ]
 });
