@@ -61,6 +61,11 @@
                         >
                             Gestion de la série
                         </b-dropdown-item>
+                        <b-dropdown-item
+                            :to="`/grand_set_series/`"
+                        >
+                            Liste des séries
+                        </b-dropdown-item>
                     </b-dropdown>
                 </b-col>
             </b-row>
