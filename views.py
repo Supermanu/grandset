@@ -114,12 +114,12 @@ class ActivityEvaluationViewSet(BaseViewSet):
 class GrandSetViewSet(BaseViewSet):
     queryset = models.GrandSetModel.objects.all()
     serializer_class = serializers.GrandSetSerializer
+    filterset_fields = ["grand_set_series"]
 
 
 class GrandSetSeriesViewSet(BaseViewSet):
     queryset = models.GrandSetSeriesModel.objects.all()
     serializer_class = serializers.GrandSetSeriesSerializer
-    filterset_fields = ["grand_sets"]
 
 
 class ActivityStatAPI(APIView):
@@ -127,8 +127,7 @@ class ActivityStatAPI(APIView):
 
     def get(self, request, grand_set, group, format=None):
         current_grand_set = models.GrandSetModel.objects.get(id=grand_set)
-        grand_set_series = models.GrandSetSeriesModel.objects.get(grand_sets=current_grand_set)
-        grand_sets = grand_set_series.grand_sets.all()
+        grand_sets = current_grand_set.grand_set_series.grandsetmodel_set.all()
 
         group_logs = models.ActivityLogModel.objects.filter(
             grand_set__in=grand_sets.all(),
@@ -171,6 +170,6 @@ class GroupWithoutActivityAPI(APIView):
         running_groups = models.ActivityLogModel.objects \
             .filter(grand_set=grand_set) \
             .values_list("group", flat=True)
-        grand_set_series_group = models.GrandSetSeriesModel.objects.get(grand_sets=grand_set).groups.all()
+        grand_set_series_group = models.GrandSetModel.objects.get(id=grand_set).grand_set_series.groups.all()
         groups = grand_set_series_group.exclude(pk__in=running_groups)
         return Response(serializers.GroupSerializer(groups, many=True).data)

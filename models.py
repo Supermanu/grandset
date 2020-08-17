@@ -68,6 +68,22 @@ class GroupModel(models.Model):
         return self.group_name
 
 
+class GrandSetSeriesModel(models.Model):
+    """
+    A Grand Set series that follows a set of Grand Set. It records
+    the groups involved as well as the activities that do not
+    necessarily occur at every Grand Set.
+    """
+
+    name = models.CharField(max_length=100)
+    date_start = models.DateField()
+    date_end = models.DateField(null=True, blank=True)
+    groups = models.ManyToManyField(GroupModel)
+    activities = models.ManyToManyField(ActivityModel)
+    datetime_creation = models.DateTimeField(auto_now_add=True)
+    datetime_update = models.DateTimeField(auto_now=True)
+
+
 class GrandSetModel(models.Model):
     """
     A Grand Set event.
@@ -75,6 +91,7 @@ class GrandSetModel(models.Model):
 
     date = models.DateField()
     activities = models.ManyToManyField(ActivityModel)
+    grand_set_series = models.ForeignKey(GrandSetSeriesModel, on_delete=models.CASCADE, null=True)
     datetime_creation = models.DateTimeField(auto_now_add=True)
     datetime_update = models.DateTimeField(auto_now=True)
 
@@ -132,20 +149,3 @@ class ActivityEvaluationModel(models.Model):
 
     def __str__(self):
         return "%s (%s) : %s" % (str(self.activity_log.activity), str(self.student), self.evaluation)
-
-
-class GrandSetSeriesModel(models.Model):
-    """
-    A Grand Set series that follows a set of Grand Set. It records
-    the groups involved as well as the activities that do not
-    necessarily occur at every Grand Set.
-    """
-
-    name = models.CharField(max_length=100)
-    date_start = models.DateField()
-    date_end = models.DateField(null=True, blank=True)
-    groups = models.ManyToManyField(GroupModel)
-    activities = models.ManyToManyField(ActivityModel)
-    grand_sets = models.ManyToManyField(GrandSetModel)
-    datetime_creation = models.DateTimeField(auto_now_add=True)
-    datetime_update = models.DateTimeField(auto_now=True)

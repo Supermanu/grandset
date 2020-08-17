@@ -232,7 +232,7 @@ export default {
             activities: [],
             groups: [],
             grandSets: [],
-            grandSetSerie: null,
+            grandSetSeries: null,
             ready: false,
             hasChanged: false,
             inputStates: {
@@ -294,6 +294,7 @@ export default {
                 {
                     date: this.date,
                     activities_id: this.activities.map(a => a.id),
+                    grand_set_series: this.grandSetSeriesId
                 };
 
             const isNewObj = this.objectId === "-1";
@@ -313,17 +314,13 @@ export default {
                         }
                     }
                     if (isNewObj && !this.series) {
-                        this.grandSetSerie.grand_sets_id.push(resp.data.id);
-                        axios.put(`/grandset/api/grandset_series/${this.grandSetSeriesId}/`, this.grandSetSerie, token)
-                            .then(() => {
-                                const path = `/grand_set/${resp.data.id}/`;
-                                this.$router.push(path, () => {
-                                    this.$root.$bvToast.toast("Les données ont bien été sauvegardées", {
-                                        variant: "success",
-                                        noCloseButton: true,
-                                    });
-                                });
+                        const path = `/grand_set/${resp.data.id}/`;
+                        this.$router.push(path, () => {
+                            this.$root.$bvToast.toast("Les données ont bien été sauvegardées", {
+                                variant: "success",
+                                noCloseButton: true,
                             });
+                        });
                     } else if (isNewObj) {
                         const path = `/grand_set_series_creation/${resp.data.id}/`;
                         this.$router.push(path, () => {
@@ -347,14 +344,17 @@ export default {
         initComponent: function () {
             if (this.series) {
                 if (this.objectId) {
-                    axios.get(`/grandset/api/grandset_series/${this.objectId}`)
-                        .then(resp => {
-                            this.name = resp.data.name;
-                            this.date_start = resp.data.date_start;
-                            this.date_end = resp.data.date_end;
-                            this.activities = resp.data.activities;
-                            this.groups = resp.data.groups;
-                            this.grandSets = resp.data.grand_sets;
+                    Promise.all([
+                        axios.get(`/grandset/api/grandset_series/${this.objectId}`),
+                        axios.get(`/grandset/api/grandset/?grand_set_series=${this.objectId}`)
+                    ])
+                        .then(resps => {
+                            this.name = resps[0].data.name;
+                            this.date_start = resps[0].data.date_start;
+                            this.date_end = resps[0].data.date_end;
+                            this.activities = resps[0].data.activities;
+                            this.groups = resps[0].data.groups;
+                            this.grandSets = resps[1].data.results;
                             this.ready = true;
                         });
                 } else {
@@ -362,24 +362,20 @@ export default {
                 }
             } else {
                 if (this.objectId !== "-1") {
-                    const prom = [
-                        axios.get(`/grandset/api/grandset/${this.objectId}/`),
-                        axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}/`),
-                    ];
-                    Promise.all(prom)
-                        .then(resps => {
-                            this.date = resps[0].data.date;
-                            this.activities = resps[0].data.activities;
-                            this.groups = resps[0].data.groups;
-                            this.grandSetSerie = resps[1].data;
+                    axios.get(`/grandset/api/grandset/${this.objectId}/`)
+                        .then(resp => {
+                            this.date = resp.data.date;
+                            this.activities = resp.data.activities;
+                            this.groups = resp.data.groups;
+                            this.grandSetSeries = resp.data.grand_set_series;
 
                             this.ready = true;
                         });
                 } else {
                     axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}/`)
                         .then(resp => {
-                            this.grandSetSerie = resp.data;
-                            this.activities = this.grandSetSerie.activities;
+                            this.grandSetSeries = resp.data;
+                            this.activities = this.grandSetSeries.activities;
                             this.ready = true;
                         });
                 }

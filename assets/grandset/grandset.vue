@@ -22,7 +22,7 @@
         <b-container>
             <b-row class="justify-content-md-center m-2">
                 <b-col md="4">
-                    <h3>{{ date }} : {{ grandSetSeriesName }}</h3>
+                    <h3>{{ date }} : {{ grandSet.grand_set_series.name }}</h3>
                 </b-col>
                 <b-col md="5">
                     <b-input-group class="mb-2">
@@ -52,12 +52,12 @@
                             Options
                         </template>
                         <b-dropdown-item
-                            :to="`/grand_set_creation/${grandSetSeriesId}/${grandSetId}/`"
+                            :to="`/grand_set_creation/${grandSet.grand_set_series.id}/${grandSetId}/`"
                         >
                             Gestion des activités
                         </b-dropdown-item>
                         <b-dropdown-item
-                            :to="`/grand_set_series_creation/${grandSetSeriesId}/`"
+                            :to="`/grand_set_series_creation/${grandSet.grand_set_series.id}/`"
                         >
                             Gestion de la série
                         </b-dropdown-item>
@@ -111,8 +111,6 @@ export default {
         return {
             grandSet: null,
             search: "",
-            grandSetSeriesId: "-1",
-            grandSetSeriesName: ""
         };
     },
     computed: {
@@ -133,22 +131,9 @@ export default {
             return Moment(this.grandSet.date).format("DD/MM/YY");
         }
     },
-    methods: {
-        /** Get Grand Set serie id. */
-        getGrandSetSerie: function () {
-            axios.get(`/grandset/api/grandset_series/?grand_set=${this.grandSetId}`)
-                .then(resp => {
-                    if (!resp.data.results) return;
-
-                    this.grandSetSeriesId = resp.data.results[0].id;
-                    this.grandSetSeriesName = resp.data.results[0].name;
-                });
-        }
-    },
     mounted: function () {
         // eslint-disable-next-line no-undef
         this.grandSet = last_grandset && last_grandset.id == this.grandSetId ? last_grandset : null;
-        this.getGrandSetSerie();
         if (!this.grandSet) {
             // First get grand set data.
             axios.get(`/grandset/api/grandset/${this.grandSetId}/`)

@@ -91,21 +91,6 @@ class ActivityEvaluationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class GrandSetSerializer(serializers.ModelSerializer):
-    activities = ActivitySerializer(read_only=True, many=True)
-    activities_id = serializers.PrimaryKeyRelatedField(
-        queryset=models.ActivityModel.objects.all(),
-        source='activities',
-        required=False,
-        allow_null=True,
-        many=True
-    )
-
-    class Meta:
-        model = models.GrandSetModel
-        fields = "__all__"
-
-
 class GrandSetSeriesSerializer(serializers.ModelSerializer):
     activities = ActivitySerializer(read_only=True, many=True)
     activities_id = serializers.PrimaryKeyRelatedField(
@@ -123,16 +108,31 @@ class GrandSetSeriesSerializer(serializers.ModelSerializer):
         allow_null=True,
         many=True
     )
-    grand_sets = GrandSetSerializer(read_only=True, many=True)
-    grand_sets_id = serializers.PrimaryKeyRelatedField(
-        queryset=models.GrandSetModel.objects.all(),
-        source='grand_sets',
-        required=False,
-        allow_null=True,
-        many=True
-    )
 
     class Meta:
         model = models.GrandSetSeriesModel
         fields = "__all__"
         depth = 1
+
+
+class GrandSetSerializer(serializers.ModelSerializer):
+    activities = ActivitySerializer(read_only=True, many=True)
+    activities_id = serializers.PrimaryKeyRelatedField(
+        queryset=models.ActivityModel.objects.all(),
+        source='activities',
+        required=False,
+        allow_null=True,
+        many=True
+    )
+
+    grand_set_series = GrandSetSeriesSerializer(read_only=True)
+    grand_set_series_id = serializers.PrimaryKeyRelatedField(
+        queryset=models.GrandSetSeriesModel.objects.all(),
+        source='grand_set_series',
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = models.GrandSetModel
+        fields = "__all__"
