@@ -49,10 +49,15 @@
                 >
                     <b-list-group-item
                         v-for="group in groups"
-                        :key="group.id"
-                        v-b-toggle="'students-' + group.id"
+                        :key="group.activityLog"
+                        v-b-toggle="'students-' + group.activityLog"
                     >
-                        {{ group.group_name }}
+                        <span v-if="group.matricule">
+                            {{ group.last_name }} {{ group.first_name }}
+                        </span>
+                        <span v-else>
+                            {{ group.group_name }}
+                        </span>
                         <em>
                             <b-icon
                                 v-if="group.status === 'IN'"
@@ -74,17 +79,19 @@
                         </b-btn>
                         <br>
                         <b-collapse 
-                            :id="'students-' + group.id"
+                            :id="'students-' + group.activityLog"
                             :accordion="activity ? 'activity-' + activity.id : 'nullactivity'"
                         >
-                            <small
-                                v-for="student in group.students_display"
-                                :key="student.matricule"
-                                class="text-muted"
-                            >
-                                {{ student }}
-                                <br>
-                            </small>
+                            <span v-if="group.id">
+                                <small
+                                    v-for="student in group.students_display"
+                                    :key="student.matricule"
+                                    class="text-muted"
+                                >
+                                    {{ student }}
+                                    <br>
+                                </small>
+                            </span>
                             <small>Mis à jour à {{ lastUpdate(group) }}</small>
                         </b-collapse>
                     </b-list-group-item>
@@ -121,7 +128,7 @@ export default {
         activityChange: function (group) {
             const grandSetId = this.$route.params.grandSetId;
             if (this.activity) {
-                this.$router.push(`/activitychange/${grandSetId}/${group.id}/${group.activityLog}`);
+                this.$router.push(`/activitychange/${grandSetId}/${group.id ? group.id : "-1"}/${group.activityLog}`);
             } else {
                 this.$router.push(`/activitychange/${grandSetId}/${group.id}/-1/`);
             }
@@ -155,8 +162,18 @@ export default {
             axios.get(`/grandset/api/activity_log/?activity=${this.activity.id}&grand_set=${this.$route.params.grandSetId}&ordering=-datetime_update`)
                 .then(resp => {
                     const ongoingLogs = resp.data.results.filter(aL => aL.status != "DON");
-                    const groupsId = ongoingLogs.map(aL => aL.group);
-                    Promise.all(groupsId.map(gI => axios.get(`/grandset/api/group/${gI}`)))
+                    const objects = ongoingLogs.map(aL => {
+                        const objectType = aL.group ? "group" : "student";
+                        const objectId = aL.group ? aL.group : aL.student;
+                        return { objectId: objectId, objectType: objectType };
+                    });
+                    Promise.all(objects.map(o => {
+                        if (o.objectType == "group") {
+                            return axios.get(`/grandset/api/group/${o.objectId}/`);
+                        } else if (o.objectType == "student") {
+                            return axios.get(`/annuaire/api/student/${o.objectId}/`);
+                        }
+                    }))
                         .then(values => {
                             this.groups = values.map((r, i) => {
                                 let group = r.data;
@@ -168,7 +185,8 @@ export default {
                             });
                             this.loading = false;
                         });
-                    if (groupsId.length == 0) this.loading = false;
+                    // Nobody in that activity.
+                    if (objects.length == 0) this.loading = false;
                 })
                 .catch(err => {
                     console.log(err);

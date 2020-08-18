@@ -119,6 +119,12 @@ class ActivityLogModel(models.Model):
         blank=True,
         null=True
     )
+    student = models.ForeignKey(
+        StudentModel,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
     status = models.CharField(
         choices=STATUS_CHOICES,
         max_length=3,
@@ -130,7 +136,7 @@ class ActivityLogModel(models.Model):
     def __str__(self):
         return "%s - %s : %s (%s)" % (
             self.datetime_update,
-            self.group.group_name,
+            self.group.group_name if self.group else self.student,
             self.activity.activity_name,
             self.status
         )
