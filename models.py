@@ -125,6 +125,11 @@ class ActivityLogModel(models.Model):
         blank=True,
         null=True,
     )
+    missing_student = models.ManyToManyField(
+        StudentModel,
+        blank=True,
+        related_name="missing_student"
+    )
     status = models.CharField(
         choices=STATUS_CHOICES,
         max_length=3,

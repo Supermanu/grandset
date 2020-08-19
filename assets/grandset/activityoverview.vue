@@ -84,9 +84,9 @@
                         >
                             <span v-if="group.id">
                                 <small
-                                    v-for="student in group.students_display"
-                                    :key="student.matricule"
-                                    class="text-muted"
+                                    v-for="(student, idx) in group.students_display"
+                                    :key="group.students_id[idx]"
+                                    :class="'text-muted ' + studentMissing(group.students_id[idx], group)"
                                 >
                                     {{ student }}
                                     <br>
@@ -125,13 +125,16 @@ export default {
         };
     },
     methods: {
+        studentMissing: function (studentId, group) {
+            if (group.missing_student.find(s => s === studentId)) return "text-strike";
+            return "";
+        },
         activityChange: function (group) {
             const grandSetId = this.$route.params.grandSetId;
-            if (this.activity) {
-                this.$router.push(`/activitychange/${grandSetId}/${group.id ? group.id : "-1"}/${group.activityLog}`);
-            } else {
-                this.$router.push(`/activitychange/${grandSetId}/${group.id}/-1/`);
-            }
+            const groupId = group.id ? group.id : "-1";
+            const studentId = group.matricule ? group.matricule : "-1";
+            const activityLogId = this.activity ? group.activityLog : "-1";
+            this.$router.push(`/activitychange/${grandSetId}/${groupId}/${studentId}/${activityLogId}`);
         },
         lastUpdate: function (group) {
             return Moment(group.datetime_update).format("HH:mm");
@@ -179,6 +182,7 @@ export default {
                                 let group = r.data;
                                 group.status = ongoingLogs[i].status;
                                 group.activityLog = ongoingLogs[i].id;
+                                group.missing_student = ongoingLogs[i].missing_student;
                                 group.datetime_update = ongoingLogs[i].datetime_update;
                                 group.datetime_creation = ongoingLogs[i].datetime_creation;
                                 return group;
@@ -212,5 +216,9 @@ export default {
 .opposite {
     display: flex;
     justify-content: space-between;
+}
+
+.text-strike {
+  text-decoration: line-through;
 }
 </style>

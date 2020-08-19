@@ -41,11 +41,17 @@
                         v-for="(log, index) in logs"
                         :key="log.id"
                     >
-                        <b-card-title>{{ log.group.group_name }}</b-card-title>
+                        <b-card-title>{{ log.group ? log.group.group_name : `${log.student.last_name} ${log.student.first_name}` }}</b-card-title>
                         <b-row>
                             <b-col md="7">
-                                <b-card-text>
-                                    {{ log.group.students_display.join(", ") }}
+                                <b-card-text v-if="log.group">
+                                    <span
+                                        v-for="(stud, idx) in log.group.students_display"
+                                        :key="idx"
+                                        :class="log.missing_student.find(ms => ms === log.group.students_id[idx]) ? 'text-strike' : ''"
+                                    >
+                                        {{ stud }}
+                                    </span>
                                 </b-card-text>
                             </b-col>
                             <b-col
@@ -118,6 +124,9 @@ export default {
         };
     },
     methods: {
+        displayStudents: function (log) {
+            return log.group.students_display.filter((s, i) => !log.missing_student.includes(log.group.students_id[i])).join(", ");
+        },
         changeStatus: function (logIndex, newStatus) {
             const group = this.logs[logIndex].group;
 
@@ -155,12 +164,16 @@ export default {
         axios.get(`/grandset/api/activity_log/?grand_set=${this.grandSetId}&activity=${this.activityId}&status=IN&status=ON&status=IN`)
             .then(resp => {
                 const logs = resp.data.results;
-                const promiseGroup = logs.map(l => axios.get(`/grandset/api/group/${l.group}`));
+                const promiseGroup = logs.map(l => {
+                    if (l.group) return axios.get(`/grandset/api/group/${l.group}`);
+                    return axios.get(`/annuaire/api/student/${l.student}`);
+                });
 
                 Promise.all(promiseGroup)
                     .then(resps => {
                         this.logs = logs.map((l, i) => {
-                            l.group = resps[i].data;
+                            if (l.group) l.group = resps[i].data;
+                            if (l.student) l.student = resps[i].data;
                             return l;
                         });
                         this.logs.sort((a, b) => a.status > b.status);

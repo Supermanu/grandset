@@ -31,17 +31,23 @@
                 <b-col
                     sm="12"
                     md="5"
-                    v-if="group"
+                    v-if="group || student"
                 >
-                    <h3>{{ group.group_name }}</h3>
-                    <ul>
-                        <li
-                            v-for="student in group.students_display"
-                            :key="student"
-                        >
-                            {{ student }}
-                        </li>
-                    </ul>
+                    <div v-if="group">
+                        <h3>{{ group.group_name }}</h3>
+                        <ul>
+                            <li
+                                v-for="(stud, idx) in group.students_display"
+                                :key="stud"
+                                :class="studentMissing(group.students_id[idx])"
+                            >
+                                {{ stud }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div v-else>
+                        <h3>{{ student.last_name }} {{ student.first_name }}</h3>
+                    </div>
                 </b-col>
                 <b-col>
                     <b-list-group>
@@ -81,7 +87,9 @@
                         :key="log.id"
                         class="border-bottom"
                     >
-                        ⇒ {{ log.activity.activity_name }} {{ lastUpdate(log.datetime_update) }}.
+                        ⇒ <small>{{ lastUpdate(log.datetime_update) }}</small>
+                        {{ log.activity.activity_name }}
+                        <span v-if="student">({{ log.group ? "en groupe" : "seul(e)" }})</span>.
                     </p>
                 </b-col>
             </b-row>
@@ -110,17 +118,26 @@ export default {
         groupId: {
             type: String,
             default: "-1",
+        },
+        studentId: {
+            type: String,
+            default: "-1",
         }
     },
     data: function () {
         return {
             activityLog: null,
             group: null,
+            student: null,
             activities: [],
             logs: []
         };
     },
     methods: {
+        studentMissing: function (studentId) {
+            if (this.activityLog.missing_student.find(s => s === studentId)) return "text-strike";
+            return "";
+        },
         getMinutes: function (minutes) {
             return parseInt(minutes.slice(0, 2)) * 60 + parseInt(minutes.slice(3, 5));
         },
@@ -172,10 +189,20 @@ export default {
         }
 
         // Get full group object.
-        axios.get(`/grandset/api/group/${this.groupId}`)
-            .then(respGroup => {
-                this.group = respGroup.data;
-            });
+        if (this.groupId !== "-1") {
+            axios.get(`/grandset/api/group/${this.groupId}`)
+                .then(respGroup => {
+                    this.group = respGroup.data;
+                });
+        }
+
+        // Get full student object.
+        if (this.studentId !== "-1") {
+            axios.get(`/annuaire/api/student/${this.studentId}/`)
+                .then(resp => {
+                    this.student = resp.data;
+                });
+        }
 
         // Get activities of the current GrandSet.
         axios.get(`/grandset/api/grandset/${this.grandSetId}/`)
@@ -187,15 +214,21 @@ export default {
                 Promise.all(promiseActivities)
                     .then(resps => {
                         const activities = resps.map(r => r.data);
-
-                        axios.get(`/grandset/api/activity_stat/${this.grandSetId}/${this.groupId}/`)
+                        let urlStat = `/grandset/api/activity_stat/${this.grandSetId}/`;
+                        if (this.studentId !== "-1") {
+                            urlStat += `student/${this.studentId}/`;
+                        } else {
+                            urlStat += `group/${this.groupId}/`;
+                        }
+                        axios.get(urlStat)
                             .then(respStat => {
                                 const activityCount = JSON.parse(respStat.data);
                                 activities.forEach(activity => {
                                     const actCount = activityCount.find(aC => aC.activity == activity.id);
                                     if (actCount) {
-                                        activity.done = "count_group" in actCount ? actCount.count_group : 0;
-                                        activity.participant = "count_participant" in actCount ? actCount.count_participant : 0;
+                                        activity.done = "count_log" in actCount ? actCount.count_log : 0;
+                                        activity.participant = "count_participant_from_group" in actCount ? actCount.count_participant_from_group : 0;
+                                        activity.participant += "count_participant_from_student" in actCount ? actCount.count_participant_from_student : 0;
                                     } else {
                                         activity.done = 0;
                                         activity.participant = 0;
@@ -205,7 +238,8 @@ export default {
                             });
 
                         // Get activity history for the current group.
-                        axios.get(`/grandset/api/activity_log/?group=${this.groupId}&ordering=-datetime_update`)
+                        const filters = this.group ? `group=${this.groupId}` : `student=${this.studentId}`;
+                        axios.get(`/grandset/api/activity_log/?${filters}&ordering=-datetime_update`)
                             .then(respLogs => {
                                 this.logs = respLogs.data.results.filter(log => {
                                     return activities.find(a => a.id == log.activity)

@@ -69,7 +69,7 @@ export default new VueRouter({
             props: true
         },
         {
-            path: "/activitychange/:grandSetId/:groupId/:activityLogId/",
+            path: "/activitychange/:grandSetId/:groupId/:studentId/:activityLogId/",
             component: ActivityChange,
             props: true
         },

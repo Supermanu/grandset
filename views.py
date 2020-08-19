@@ -29,9 +29,10 @@ from django_filters import rest_framework as filters
 
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.views.generic import TemplateView
-from django.db.models import Count
+from django.db.models import Count, Q
 
 from core.views import get_app_settings, LargePageSizePagination
+from core.models import StudentModel
 from core.utilities import get_menu
 
 from . import models, serializers
@@ -90,12 +91,22 @@ class ActivityViewSet(BaseViewSet):
     serializer_class = serializers.ActivitySerializer
 
 
+class StudentFilter(filters.ModelChoiceFilter):
+    def filter(self, qs, value):
+        if value:
+            return qs.filter(
+                Q(student=value) | Q(group__students=value)
+            ).exclude(missing_student=value)
+        return qs
+
+
 class ActivityLogFilters(filters.FilterSet):
     status = filters.MultipleChoiceFilter(choices=models.ActivityLogModel.STATUS_CHOICES)
+    student = StudentFilter(queryset=StudentModel.objects.all())
 
     class Meta:
         model = models.ActivityLogModel
-        fields = ["activity", "grand_set", "group", "status"]
+        fields = ["activity", "grand_set", "group", "status", "student"]
 
 
 class ActivityLogViewSet(BaseViewSet):
@@ -125,38 +136,56 @@ class GrandSetSeriesViewSet(BaseViewSet):
 class ActivityStatAPI(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, grand_set, group, format=None):
+    def get(self, request, grand_set, group=None, student=None, format=None):
         current_grand_set = models.GrandSetModel.objects.get(id=grand_set)
         grand_sets = current_grand_set.grand_set_series.grandsetmodel_set.all()
 
-        group_logs = models.ActivityLogModel.objects.filter(
-            grand_set__in=grand_sets.all(),
-            activity__in=current_grand_set.activities.all(),
-            status="DON",
-            group__id=group
+        if student:
+            s = StudentModel.objects.get(matricule=int(student))
+            group = models.GroupModel.objects.get(students=s).id
+            filter_fields = Q(group__id=group) | Q(student=s)
+        else:
+            filter_fields = Q(group__id=group)
+
+        targeted_logs = models.ActivityLogModel.objects.filter(
+            Q(
+                grand_set__in=grand_sets.all(),
+                activity__in=current_grand_set.activities.all(),
+                status="DON",
+            )
+            & filter_fields
+        )
+        if student:
+            targeted_logs = targeted_logs.exclude(missing_student=s)
+
+        # Count the number of done activities by activity for the student or the group.
+        logs_count = list(
+            targeted_logs.values("activity").annotate(count_log=Count("activity"))
         )
 
-        group_logs_count = list(
-            group_logs.values("activity").annotate(count_group=Count("activity"))
-        )
-
+        # Get all logs from running activities or soon to be.
         activity_participant = models.ActivityLogModel.objects.filter(
             grand_set=current_grand_set,
             status__in=["IN", "ON"]
         )
 
+        # Count the number of student from both groups and lonely students in running activities.
         activity_participant_count = list(
-            activity_participant.values("activity").annotate(count_participant=Count("group"))
+            activity_participant.values("activity").annotate(
+                count_participant_from_group=Count("group__students"),
+                count_participant_from_student=Count("student")
+            )
         )
 
         activities = activity_participant_count
-        for g in group_logs_count:
+        for g in logs_count:
+            # Find related activity.
             activity_index = next(
                 (index for (index, d) in enumerate(activities) if d["activity"] == g["activity"]),
                 None
             )
             if activity_index:
-                activities[activity_index]["count_group"] = g["count_group"]
+                activities[activity_index]["count_log"] = g["count_log"]
             else:
                 activities.append(g)
 
