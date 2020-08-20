@@ -201,6 +201,10 @@ export default {
         groupId: {
             type: String,
             default: "-1"
+        },
+        studentId: {
+            type: String,
+            default: "-1"
         }
     },
     data: function () {

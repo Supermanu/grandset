@@ -79,7 +79,7 @@ export default new VueRouter({
             props: true
         },
         {
-            path: "/evaluation/:activityLogId/:groupId/",
+            path: "/evaluation/:activityLogId/:groupId/:studentId/",
             component: Evaluation,
             props: true
         },

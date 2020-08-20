@@ -67,7 +67,7 @@
                                     </b-btn>
                                     <b-btn
                                         variant="outline-success"
-                                        :to="`/evaluation/${log.id}/${log.group.id}/`"
+                                        :to="`/evaluation/${log.id}/${log.group ? log.group.id : '-1'}/${log.student ? log.student.matricule : '-1'}/`"
                                     >
                                         <b-icon icon="list-check" />
                                         Évaluer

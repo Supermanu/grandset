@@ -162,14 +162,14 @@ export default {
         createNewLog: function (activity) {
             const newLog = {
                 grand_set: this.grandSetId,
-                group: this.groupId,
+                [this.group ? "group" : "student"]: this.group ? this.groupId : this.studentId,
                 activity: activity.id,
             };
             axios.post("/grandset/api/activity_log/", newLog, token)
                 .then(() => {
                     this.$router.push(`/grand_set/${this.grandSetId}`, () => {
                         this.$root.$bvToast.toast(
-                            `${this.group.group_name} est maintenant dans l'activité ${activity.activity_name}`,
+                            `${this.group ? this.group.group_name : this.student.display} est maintenant dans l'activité ${activity.activity_name}`,
                             {
                                 variant: "success",
                                 noCloseButton: true,
