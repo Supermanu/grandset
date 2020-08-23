@@ -42,52 +42,30 @@
                 >
                     <b-col>
                         <b-form-group
-                            label="Évaluation du groupe"
+                            :label="`Évaluation de ${this.group ? this.group.group_name : this.student.display}`"
                             label-cols-sm="4"
                             label-align-sm="center"
                             label-class="font-weight-bold"
-                            description="Évaluer l'ensemble du groupe.
-                                Si nécessaire, vous pouvez évaluer individuellement ci-dessous."
+                            :description="group ? `Évaluer l'ensemble du groupe.
+                                Si nécessaire, vous pouvez évaluer individuellement ci-dessous.`: ''"
                         >
                             <div v-if="useCompetencies">
-                                <b-form-group
+                                <competence-evaluation
                                     v-for="comp in activity.competence"
                                     :key="comp.id"
-                                    :label="comp.name"
+                                    :comp-name="comp.name"
+                                    v-model="generalEval[comp.id]"
                                     label-cols-md="4"
                                     label-align-md="right"
-                                >
-                                    <b-input-group>
-                                        <b-form-input
-                                            v-model="groupEval[comp.id]"
-                                            type="range"
-                                            min="0"
-                                            max="2"
-                                            @input="updateIndividual(groupEval[comp.id], comp.id)"
-                                        />
-                                        <b-input-group-append
-                                            class="w-50"
-                                        >
-                                            <b-input-group-text
-                                                :class="colorCompletion(groupEval[comp.id])"
-                                            >
-                                                {{ labelCompetence(groupEval[comp.id]) }}
-                                                <b-icon
-                                                    v-if="groupEval[comp.id] === '2'"
-                                                    icon="check"
-                                                    variant="success"
-                                                />
-                                            </b-input-group-text>
-                                        </b-input-group-append>
-                                    </b-input-group>
-                                </b-form-group>
+                                    @input="updateIndividual(generalEval[comp.id], comp.id)"
+                                />
                             </div>
                             <div v-else>
                                 <b-input-group
                                     :append="'/ ' + $store.state.settings.max_points"
                                 >
                                     <b-form-input
-                                        v-model="groupEval"
+                                        v-model="generalEval"
                                         type="number"
                                         step="0.01"
                                         min="0"
@@ -97,7 +75,10 @@
                                 </b-input-group>
                             </div>
                         </b-form-group>
-                        <b-card bg-variant="light">
+                        <b-card
+                            v-if="group"
+                            bg-variant="light"
+                        >
                             <b-form-group
                                 label-cols-lg="3"
                                 :label="group.group_name"
@@ -106,8 +87,8 @@
                                 class="mb-0"
                             >
                                 <b-form-group 
-                                    v-for="(student, index) in group.students"
-                                    :key="student.matricule"
+                                    v-for="(stud, index) in students"
+                                    :key="stud.matricule"
                                     label-cols-sm="3"
                                     label-align-sm="right"
                                 >
@@ -117,41 +98,19 @@
                                             class="mr-n2"
                                             v-model="individualEval[index]"
                                         >
-                                            {{ group.students_display[index] }}
+                                            {{ students[index].display }}
                                         </b-form-checkbox>
                                     </slot>
                                     <div v-if="useCompetencies">
-                                        <b-form-group
+                                        <competence-evaluation
                                             v-for="comp in activity.competence"
                                             :key="comp.id"
-                                            :label="comp.name"
+                                            :comp-name="comp.name"
+                                            v-model="evaluation[index][comp.id]"
                                             label-cols-md="4"
                                             label-align-md="right"
-                                        >
-                                            <b-input-group>
-                                                <b-form-input
-                                                    v-model="evaluation[index][comp.id]"
-                                                    type="range"
-                                                    min="0"
-                                                    max="2"
-                                                    :disabled="!individualEval[index]"
-                                                />
-                                                <b-input-group-append
-                                                    class="w-50"
-                                                >
-                                                    <b-input-group-text
-                                                        :class="colorCompletion(evaluation[index][comp.id])"
-                                                    >
-                                                        {{ labelCompetence(evaluation[index][comp.id]) }}
-                                                        <b-icon
-                                                            v-if="evaluation[index][comp.id] === '2'"
-                                                            icon="check"
-                                                            variant="success"
-                                                        />
-                                                    </b-input-group-text>
-                                                </b-input-group-append>
-                                            </b-input-group>
-                                        </b-form-group>
+                                            :disabled="!individualEval[index]"
+                                        />
                                     </div>
                                     <div v-else>
                                         <b-input-group
@@ -190,8 +149,10 @@
 <script>
 import axios from "axios";
 
+import CompetenceEvaluation from "./compeval.vue";
+
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
-const compEvalLabel = ["Non maîtrisé", "Partiellement maîtrisé", "Maîtrisé"];
+
 export default {
     props: {
         activityLogId: {
@@ -213,28 +174,22 @@ export default {
             activityLog: null,
             activity: null,
             group: null,
+            student: null,
             activityEvaluation: [],
             loading: true,
             individualEval: [],
             evaluation: [],
-            groupEval: null,
+            generalEval: null,
         };
     },
-    methods: {
-        colorCompletion: function (compVal) {
-            switch (compVal) {
-            case "1":
-                return "half-completed";
-            case "2":
-                return "completed";
+    computed: {
+        students: function () {
+            if (!this.group) return [];
 
-            default:
-                return "";
-            }
-        },
-        labelCompetence: function (compVal) {
-            return compEvalLabel[compVal];
-        },
+            return this.group.students.filter(s => !this.activityLog.missing_student.includes(s.matricule));
+        }
+    },
+    methods: {
         updateIndividual: function (value, compet=null) {
             this.individualEval.forEach((toNotUpdate, index) => {
                 if (toNotUpdate) return;
@@ -252,7 +207,9 @@ export default {
                 evalPromises = this.activityEvaluation.map((aEv, index) => {
                     let data = {
                         activity_log: this.activityLogId,
-                        student: this.group.students_id[index],
+                        student: this.group ?
+                            this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
+                            : this.student.matricule,
                     };
                     if (this.useCompetencies) {
                         data.competence_evaluation = this.evaluation[index];
@@ -265,7 +222,9 @@ export default {
                 evalPromises = this.evaluation.map((ev, index) => {
                     let data = {
                         activity_log: this.activityLogId,
-                        student: this.group.students_id[index],
+                        student: this.group ?
+                            this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
+                            : this.student.matricule,
                     };
                     if (this.useCompetencies) {
                         data.competence_evaluation = ev;
@@ -293,15 +252,28 @@ export default {
     mounted: function () {
         if (this.activityLogId === "-1") return;
 
-        const activityLogProm = axios.get(`/grandset/api/activity_log/${this.activityLogId}/`);
-        const groupProm = axios.get(`/grandset/api/group/${this.groupId}/`);
-        const previousEval = axios.get(`/grandset/api/activity_evaluation/?activity_log=${this.activityLogId}`);
-        Promise.all([activityLogProm, groupProm, previousEval])
+        const isGroup = this.groupId !== "-1";
+        const dataProm = [
+            axios.get(`/grandset/api/activity_log/${this.activityLogId}/`),
+            axios.get(`/grandset/api/activity_evaluation/?activity_log=${this.activityLogId}`)
+        ];
+        if (isGroup) {
+            dataProm.push(axios.get(`/grandset/api/group/${this.groupId}/`));
+        } else {
+            dataProm.push(axios.get(`/annuaire/api/student/${this.studentId}/`));
+        }
+
+        Promise.all(dataProm)
             .then(resps => {
                 this.activityLog = resps[0].data;
-                this.group = resps[1].data;
-                const hasPreviousEval = resps[2].data.count > 0;
-                this.individualEval = this.group.students.map(() => hasPreviousEval);
+
+                const hasPreviousEval = resps[1].data.count > 0;
+                const students = isGroup ?
+                    resps[2].data.students.filter(s => !this.activityLog.missing_student.includes(s.matricule))
+                    : [this.student];
+                this.individualEval = students
+                    .filter(s => !this.activityLog.missing_student.includes(s.matricule))
+                    .map(() => hasPreviousEval);
 
                 axios.get(`/grandset/api/activity/${this.activityLog.activity}/`)
                     .then(resp => {
@@ -309,18 +281,25 @@ export default {
                         this.useCompetencies = this.activity.competence.length > 0;
                         const evalKey = this.useCompetencies ? "competence_evaluation" : "evaluation";
                         if (this.useCompetencies) {
-                            this.groupEval = this.activity.competence_id.reduce((a,b) => (a[b] = "0", a),{});
+                            this.generalEval = this.activity.competence_id.reduce((a,b) => (a[b] = 0, a),{});
                         }
-                        this.evaluation = this.group.students.map(student => {
+                        this.evaluation = students.map(student => {
                             if (hasPreviousEval) {
-                                return resps[2].data.results.find(ev => ev.student === student.matricule)[evalKey];
+                                return resps[1].data.results.find(ev => ev.student === student.matricule)[evalKey];
                             }
-                            return this.groupEval;
+                            return Object.assign({}, this.generalEval);
                         });
+
                         if (hasPreviousEval) {
-                            this.activityEvaluation = this.group.students.map(student => {
-                                return resps[2].data.results.find(ev => ev.student === student.matricule);
+                            this.activityEvaluation = students.map(student => {
+                                return resps[1].data.results.find(ev => ev.student === student.matricule);
                             });
+                            if (!isGroup) this.generalEval = this.evaluation[0];
+                        }
+                        if (isGroup) {
+                            this.group = resps[2].data;
+                        } else {
+                            this.student = resps[2].data;
                         }
                         this.loading = false;
                     });
@@ -329,15 +308,8 @@ export default {
                 console.log(err);
             });
     },
+    components: {
+        CompetenceEvaluation
+    }
 };
 </script>
-
-<style>
-.half-completed {
-    background-color: lightyellow;
-}
-
-.completed {
-    background-color: lightgreen;
-}
-</style>
