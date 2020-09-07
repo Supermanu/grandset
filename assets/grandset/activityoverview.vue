@@ -50,7 +50,6 @@
                     <b-list-group-item
                         v-for="group in groups"
                         :key="group.activityLog"
-                        v-b-toggle="'students-' + group.activityLog"
                     >
                         <span v-if="group.matricule">
                             {{ group.last_name }} {{ group.first_name }}
@@ -77,6 +76,14 @@
                         >
                             <b-icon icon="arrow-left-right" />
                         </b-btn>
+                        <b-btn
+                            class="float-right ml-2"
+                            size="sm"
+                            variant="outline-secondary"
+                            v-b-toggle="'students-' + group.activityLog"
+                        >
+                            <b-icon icon="three-dots-vertical" />
+                        </b-btn>
                         <br>
                         <b-collapse 
                             :id="'students-' + group.activityLog"
@@ -89,6 +96,11 @@
                                     :class="'text-muted ' + studentMissing(group.students_id[idx], group)"
                                 >
                                     {{ student }}
+                                    <b-link
+                                        @click="activityChange(group, group.students_id[idx])"
+                                    >
+                                        <b-icon icon="arrow-left-right" />
+                                    </b-link>
                                     <br>
                                 </small>
                             </span>
@@ -129,10 +141,10 @@ export default {
             if (group.missing_student.find(s => s === studentId)) return "text-strike";
             return "";
         },
-        activityChange: function (group) {
+        activityChange: function (group, student="-1") {
             const grandSetId = this.$route.params.grandSetId;
-            const groupId = group.id ? group.id : "-1";
-            const studentId = group.matricule ? group.matricule : "-1";
+            const studentId = group.matricule ? group.matricule : student;
+            const groupId = group.id && studentId === "-1" ? group.id : "-1";
             const activityLogId = this.activity ? group.activityLog : "-1";
             this.$router.push(`/activitychange/${grandSetId}/${groupId}/${studentId}/${activityLogId}`);
         },
