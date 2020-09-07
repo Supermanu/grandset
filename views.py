@@ -39,11 +39,12 @@ from . import models, serializers
 
 
 def get_menu_entry(active_app: str, user) -> dict:
+    entry_name = get_settings().grand_set_name
     if not user.has_perm('grandset.view_grandsetmodel'):
         return {}
     return {
             "app": "grandset",
-            "display": "Grand Set",
+            "display": f"{entry_name}",
             "url": "/grandset",
             "active": active_app == "grandset"
     }

@@ -26,6 +26,7 @@ from core.models import StudentModel, ResponsibleModel, TeachingModel
 
 
 class GrandSetSettingsModel(models.Model):
+    grand_set_name = models.CharField(max_length=100, default="Grand Set")
     teachings = models.ManyToManyField(TeachingModel)
     return_to_hq = models.BooleanField(default=True)
     max_points = models.PositiveIntegerField(default=20)
