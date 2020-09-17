@@ -294,7 +294,7 @@ export default {
                 {
                     date: this.date,
                     activities_id: this.activities.map(a => a.id),
-                    grand_set_series: this.grandSetSeriesId
+                    grand_set_series_id: this.grandSetSeriesId
                 };
 
             const isNewObj = this.objectId === "-1";
