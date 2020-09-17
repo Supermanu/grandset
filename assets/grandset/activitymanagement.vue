@@ -131,7 +131,7 @@ export default {
             const group = this.logs[logIndex].group;
 
             if (!this.$store.state.settings.return_to_hq && newStatus === "OUT") {
-                this.$router.push(`/activitychange/${this.grandSetId}/${group.id}/${this.logs[logIndex].id}/`);
+                this.$router.push(`/activitychange/${this.grandSetId}/${group ? group.id : "-1"}/${this.logs[logIndex].id}/`);
                 return;
             }
 
@@ -145,7 +145,7 @@ export default {
                         this.logs.sort((a, b) => a.status > b.status);
                     } else if (newStatus == "OUT") {
                         this.$root.$bvToast.toast(
-                            `${group.group_name} n'est plus dans l'activité ${this.activity.activity_name}`,
+                            `${group ? group.group_name : this.logs[logIndex].student.last_name} n'est plus dans l'activité ${this.activity.activity_name}`,
                             {
                                 variant: "warning",
                                 noCloseButton: true,
