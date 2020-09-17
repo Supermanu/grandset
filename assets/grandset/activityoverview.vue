@@ -138,10 +138,12 @@ export default {
     },
     methods: {
         studentMissing: function (studentId, group) {
-            if (group.missing_student.find(s => s === studentId)) return "text-strike";
+            if ("missing_student" in group && group.missing_student.find(s => s === studentId)) return "text-strike";
             return "";
         },
         activityChange: function (group, student="-1") {
+            console.log(group);
+            console.log(student);
             const grandSetId = this.$route.params.grandSetId;
             const studentId = group.matricule ? group.matricule : student;
             const groupId = group.id && studentId === "-1" ? group.id : "-1";

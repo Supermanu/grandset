@@ -135,7 +135,7 @@ export default {
     },
     methods: {
         studentMissing: function (studentId) {
-            if (this.activityLog.missing_student.find(s => s === studentId)) return "text-strike";
+            if (this.activityLog && this.activityLog.missing_student.find(s => s === studentId)) return "text-strike";
             return "";
         },
         getMinutes: function (minutes) {
