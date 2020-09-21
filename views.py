@@ -198,7 +198,7 @@ class GroupWithoutActivityAPI(APIView):
 
     def get(self, request, grand_set, format=None):
         running_groups = models.ActivityLogModel.objects \
-            .filter(grand_set=grand_set) \
+            .filter(grand_set=grand_set, group__isnull=False) \
             .values_list("group", flat=True)
         grand_set_series_group = models.GrandSetModel.objects.get(id=grand_set).grand_set_series.groups.all()
         groups = grand_set_series_group.exclude(pk__in=running_groups)
