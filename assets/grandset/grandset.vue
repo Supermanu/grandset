@@ -20,7 +20,10 @@
 <template>
     <div>
         <b-container>
-            <b-row class="justify-content-md-center m-2">
+            <b-row
+                v-if="grandSet"
+                class="justify-content-md-center m-2"
+            >
                 <b-col md="4">
                     <h3>{{ date }} : {{ grandSet.grand_set_series.name }}</h3>
                 </b-col>
