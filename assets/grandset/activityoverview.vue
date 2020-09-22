@@ -44,7 +44,7 @@
                     </div>
                 </template>
                 <b-list-group
-                    v-if="groups.length > 0"
+                    v-if="groups.length > 0 && !hide"
                     flush
                 >
                     <b-list-group-item
@@ -108,6 +108,14 @@
                         </b-collapse>
                     </b-list-group-item>
                 </b-list-group>
+                <b-card-body v-else-if="hide">
+                    <b-btn
+                        block
+                        @click="hide=!hide"
+                    >
+                        Montrer tous les groupes
+                    </b-btn>
+                </b-card-body>
                 <b-card-body v-else>
                     Aucun groupe dans cette activité
                 </b-card-body>
@@ -134,6 +142,7 @@ export default {
         return {
             groups: [],
             loading: true,
+            hide: false,
         };
     },
     methods: {
@@ -211,6 +220,7 @@ export default {
                     this.loading = false;
                 });
         } else {
+            this.hide = true;
             // Show groups without activity.
             axios.get(`/grandset/api/group_without_activity/${this.$route.params.grandSetId}/`)
                 .then(resp => {
