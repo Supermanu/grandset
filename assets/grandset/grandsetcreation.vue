@@ -358,7 +358,6 @@ export default {
                         .then(resp => {
                             this.date = resp.data.date;
                             this.activities = resp.data.activities;
-                            this.groups = resp.data.groups;
                             this.grandSetSeries = resp.data.grand_set_series;
 
                             this.ready = true;
