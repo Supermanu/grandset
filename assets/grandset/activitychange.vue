@@ -88,8 +88,8 @@
                         class="border-bottom"
                     >
                         ⇒ <small>{{ lastUpdate(log.datetime_update) }}</small>
-                        {{ log.activity.activity_name }}
-                        <span v-if="student">({{ log.group ? "en groupe" : "seul(e)" }})</span>.
+                        <strong>{{ log.activity.activity_name }}</strong>
+                        <span v-if="student">({{ log.group ? "en groupe" : "seul(e)" }})</span>
                     </p>
                 </b-col>
             </b-row>
