@@ -165,6 +165,7 @@ export default {
                 [this.group ? "group" : "student"]: this.group ? this.groupId : this.studentId,
                 activity: activity.id,
             };
+            if (this.$store.state.settings.direct_from_hq) newLog.status = "ON";
             axios.post("/grandset/api/activity_log/", newLog, token)
                 .then(() => {
                     this.$router.push(`/grand_set/${this.grandSetId}`, () => {
