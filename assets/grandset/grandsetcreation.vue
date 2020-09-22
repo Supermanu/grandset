@@ -305,14 +305,6 @@ export default {
             const send = isNewObj ? axios.post : axios.put;
             send(url, data, token)
                 .then(resp => {
-                    if (!this.series) {
-                        // Update last_grandset variable if needed.
-                        // eslint-disable-next-line no-undef
-                        if (last_grandset.id === resp.data.id) {
-                            // eslint-disable-next-line no-undef
-                            last_grandset = resp.data;
-                        }
-                    }
                     if (isNewObj && !this.series) {
                         const path = `/grand_set/${resp.data.id}/`;
                         this.$router.push(path, () => {

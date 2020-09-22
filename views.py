@@ -66,13 +66,6 @@ class GrandSetView(
         context = super().get_context_data()
         context['menu'] = json.dumps(get_menu(self.request.user, "grandset"))
         context['settings'] = json.dumps((serializers.GrandSetSettingsSerializer(get_settings()).data))
-
-        last_grandset = models.GrandSetModel.objects.order_by("-date").first()
-        if not last_grandset:
-            context["last_grandset"] = json.dumps(last_grandset)
-        else:
-            context["last_grandset"] = json.dumps(serializers.GrandSetSerializer(last_grandset).data)
-
         return context
 
 

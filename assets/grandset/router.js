@@ -35,13 +35,7 @@ export default new VueRouter({
         {
             path: "",
             redirect: () => {
-                // eslint-disable-next-line no-undef
-                if (last_grandset) {
-                    // eslint-disable-next-line no-undef
-                    return `/grand_set/${last_grandset.id}/`;
-                } else {
-                    return "/grand_set_series/";
-                }
+                return "/grand_set_series/";
             }
         },
         {

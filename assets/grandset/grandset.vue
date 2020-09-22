@@ -135,16 +135,10 @@ export default {
         }
     },
     mounted: function () {
-        // eslint-disable-next-line no-undef
-        this.grandSet = last_grandset && last_grandset.id == this.grandSetId ? last_grandset : null;
-        if (!this.grandSet) {
-            // First get grand set data.
-            axios.get(`/grandset/api/grandset/${this.grandSetId}/`)
-                .then(resp => {
-                    this.grandSet = resp.data;
-                });
-        }
-        
+        axios.get(`/grandset/api/grandset/${this.grandSetId}/`)
+            .then(resp => {
+                this.grandSet = resp.data;
+            });
     },
     components: {
         ActivityOverview
