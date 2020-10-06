@@ -53,8 +53,9 @@
                                         Modifier
                                     </b-btn>
                                     <b-btn
+                                        v-if="s.last_grand_set"
                                         size="sm"
-                                        :to="`/grand_set/${1}`"
+                                        :to="`/grand_set/${s.last_grand_set}/`"
                                     >
                                         Voir
                                     </b-btn>
@@ -69,6 +70,7 @@
 </template>
 
 <script>
+import Moment from "moment";
 import axios from "axios";
 
 export default {
@@ -80,7 +82,17 @@ export default {
     mounted: function () {
         axios.get("/grandset/api/grandset_series/")
             .then(resp => {
-                this.series = resp.data.results;
+                this.series = resp.data.results.map(s => {
+                    s.last_grand_set = null;
+                    return s;
+                });
+                const last_grand_set = this.series.map(s => axios.get(`/grandset/api/grandset/?grand_set_series=${s.id}&date__gte=${Moment().format("L")}`));
+                Promise.all(last_grand_set)
+                    .then(resps => {
+                        resps.forEach((gS, idx) => {
+                            this.series[idx].last_grand_set = gS.data.count > 0 ? gS.data.results[0].id : null;
+                        });
+                    });
             });
     },
 };

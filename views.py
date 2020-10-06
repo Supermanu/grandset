@@ -31,7 +31,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from django.views.generic import TemplateView
 from django.db.models import Count, Q
 
-from core.views import get_app_settings, LargePageSizePagination
+from core.views import get_app_settings, LargePageSizePagination, BaseFilters
 from core.models import StudentModel
 from core.utilities import get_menu
 
@@ -116,10 +116,18 @@ class ActivityEvaluationViewSet(BaseViewSet):
     filterset_fields = ['student', 'activity_log']
 
 
+class GrandSetFilters(BaseFilters):
+    class Meta:
+        model = models.GrandSetModel
+        fields_to_filter = ["grand_set_series", "date"]
+        fields = BaseFilters.Meta.generate_filters(fields_to_filter)
+        filter_overrides = BaseFilters.Meta.filter_overrides
+
+
 class GrandSetViewSet(BaseViewSet):
     queryset = models.GrandSetModel.objects.all()
     serializer_class = serializers.GrandSetSerializer
-    filterset_fields = ["grand_set_series"]
+    filter_class = GrandSetFilters
 
 
 class GrandSetSeriesViewSet(BaseViewSet):
