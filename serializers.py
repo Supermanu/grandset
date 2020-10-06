@@ -61,7 +61,7 @@ class ActivitySerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    students = StudentSerializer(read_only=True, many=True, no_course=True)
+    students = StudentSerializer(read_only=True, many=True)
     students_id = serializers.PrimaryKeyRelatedField(
         queryset=StudentModel.objects.all(),
         source='students',
