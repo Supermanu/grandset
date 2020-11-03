@@ -23,7 +23,7 @@
             <b-row>
                 <b-col>
                     <b-btn :to="`/grand_set/${grandSetId}/`">
-                        Retour au Grand Set
+                        Retour au {{ $store.state.settings.grand_set_name }}
                     </b-btn>
                 </b-col>
             </b-row>

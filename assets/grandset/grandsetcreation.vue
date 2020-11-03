@@ -25,7 +25,7 @@
                     <h3>
                         Préparer
                         {{ series ? "une série" : "un" }}
-                        Grand Set
+                        {{ $store.state.settings.grand_set_name }}
                     </h3>
                 </b-col>
             </b-row>
@@ -123,7 +123,7 @@
             >
                 <b-row>
                     <b-col>
-                        <h5>Grand Sets de la série</h5>
+                        <h5>{{ $store.state.settings.grand_set_name }} de la série</h5>
                     </b-col>
                 </b-row>
                 <b-row
@@ -139,10 +139,10 @@
                                 icon="plus"
                             />
                             <span v-if="objectId !== '-1'">
-                                Ajouter un grand set
+                                Ajouter un {{ $store.state.settings.grand_set_name }}
                             </span>
                             <span v-else>
-                                Enregistrer avant d'ajouter un grand set
+                                Enregistrer avant d'ajouter un {{ $store.state.settings.grand_set_name }}
                             </span>
                         </b-btn>
                     </b-col>
@@ -165,7 +165,7 @@
                                             size="sm"
                                             variant="outline-primary"
                                         >
-                                            Vers le grand set
+                                            Voir
                                             <b-icon
                                                 icon="chevron-right"
                                             />

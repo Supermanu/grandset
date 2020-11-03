@@ -22,7 +22,7 @@
         <b-container>
             <b-row>
                 <b-col>
-                    <h3>Séries de GrandSet</h3>
+                    <h3>Séries de {{ $store.state.settings.grand_set_name }}</h3>
                 </b-col>
             </b-row>
             <b-row>
