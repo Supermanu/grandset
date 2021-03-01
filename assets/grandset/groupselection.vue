@@ -274,8 +274,7 @@ export default {
             }
         },
         addGroup(groupToAdd) {
-            const index = this.availGroup.findIndex(g => g.id === groupToAdd.id);
-            const group = this.availGroup.splice(index, 1);
+            const group = this.availGroup.splice(groupToAdd, 1);
             this.$emit("input", this.value.concat(group));
             this.$emit("update");
         },
