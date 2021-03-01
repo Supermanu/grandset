@@ -280,9 +280,8 @@ export default {
             this.$emit("update");
         },
         removeGroup(groupToRemove) {
-            const index = this.availGroup.findIndex(g => g.id === groupToRemove.id);
-            this.availGroup.unshift(this.value[index]);
-            this.$emit("input", this.value.filter((v, i) => i != index));
+            this.availGroup.unshift(this.value[groupToRemove]);
+            this.$emit("input", this.value.filter((v, i) => i != groupToRemove));
             this.$emit("update");
         },
         submit: function (evt) {
