@@ -56,8 +56,8 @@
                             :key="activity.id"
                             button
                             class="d-flex justify-content-between align-items-center"
-                            @click="changeActivity(activity)"
-                            :disabled="activityLog ? activity.id == activityLog.activity : false"
+                            @click="changeActivity(activity, $event)"
+                            :disabled="activityLog ? activity.id == activityLog.activity : triggered"
                         >
                             {{ activity.activity_name }}
                             <span>
@@ -130,7 +130,8 @@ export default {
             group: null,
             student: null,
             activities: [],
-            logs: []
+            logs: [],
+            triggered: false,
         };
     },
     methods: {
@@ -144,19 +145,26 @@ export default {
         lastUpdate: function (lastUpdate) {
             return String(Moment(lastUpdate).calendar()).toLowerCase();
         },
-        changeActivity: function (activity) {
-            // let app = this;
-            if (this.activityLog) {
-                axios.patch(
-                    `/grandset/api/activity_log/${this.activityLogId}/`,
-                    {status: "DON"},
-                    token
-                )
-                    .then(() => {
+        changeActivity: function (activity, event) {
+            // Avoid double clicks
+            if(!event.detail || event.detail === 1){
+                setTimeout(() => {
+                    if (this.triggered) return;
+
+                    this.triggered = true;
+                    if (this.activityLog) {
+                        axios.patch(
+                            `/grandset/api/activity_log/${this.activityLogId}/`,
+                            {status: "DON"},
+                            token
+                        )
+                            .then(() => {
+                                this.createNewLog(activity);
+                            });
+                    } else {
                         this.createNewLog(activity);
-                    });
-            } else {
-                this.createNewLog(activity);
+                    }
+                }, 100);
             }
         },
         createNewLog: function (activity) {
@@ -168,6 +176,7 @@ export default {
             if (this.$store.state.settings.direct_from_hq) newLog.status = "ON";
             axios.post("/grandset/api/activity_log/", newLog, token)
                 .then(() => {
+                    this.triggered = false;
                     this.$router.push(`/grand_set/${this.grandSetId}`, () => {
                         this.$root.$bvToast.toast(
                             `${this.group ? this.group.group_name : this.student.display} est maintenant dans l'activité ${activity.activity_name}`,
