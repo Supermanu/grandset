@@ -38,9 +38,9 @@ from core.utilities import get_menu
 from . import models, serializers
 
 
-def get_menu_entry(active_app: str, user) -> dict:
+def get_menu_entry(active_app: str, request) -> dict:
     entry_name = get_settings().grand_set_name
-    if not user.has_perm('grandset.view_grandsetmodel'):
+    if not request.user.has_perm('grandset.view_grandsetmodel'):
         return {}
     return {
             "app": "grandset",
@@ -64,7 +64,7 @@ class GrandSetView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        context['menu'] = json.dumps(get_menu(self.request.user, "grandset"))
+        context['menu'] = json.dumps(get_menu(self.request, "grandset"))
         context['settings'] = json.dumps((serializers.GrandSetSettingsSerializer(get_settings()).data))
         return context
 
