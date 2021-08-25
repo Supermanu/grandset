@@ -80,8 +80,8 @@ class GrandSetSeriesModel(models.Model):
     name = models.CharField(max_length=100)
     date_start = models.DateField()
     date_end = models.DateField(null=True, blank=True)
-    groups = models.ManyToManyField(GroupModel)
-    activities = models.ManyToManyField(ActivityModel)
+    groups = models.ManyToManyField(GroupModel, blank=True)
+    activities = models.ManyToManyField(ActivityModel, blank=True)
     datetime_creation = models.DateTimeField(auto_now_add=True)
     datetime_update = models.DateTimeField(auto_now=True)
 
