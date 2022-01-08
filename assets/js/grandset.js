@@ -21,7 +21,7 @@ import Vue from "vue";
 
 import store from "../grandset/store.js";
 import router from "../grandset/router.js";
-import Menu from "assets/common/menu.vue";
+import Menu from "assets/common/menu_bar.vue";
 
 new Vue({
     el: "#vue-app",
