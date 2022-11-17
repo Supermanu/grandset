@@ -92,38 +92,20 @@ class ActivityEvaluationSerializer(serializers.ModelSerializer):
 
 
 class GrandSetSeriesSerializer(serializers.ModelSerializer):
-    activities = ActivitySerializer(read_only=True, many=True)
-    activities_id = serializers.PrimaryKeyRelatedField(
-        queryset=models.ActivityModel.objects.all(),
-        source='activities',
-        required=False,
-        allow_null=True,
-        many=True
-    )
-    groups = GroupSerializer(read_only=True, many=True)
-    groups_id = serializers.PrimaryKeyRelatedField(
-        queryset=models.GroupModel.objects.all(),
-        source='groups',
-        required=False,
-        allow_null=True,
-        many=True
-    )
-
     class Meta:
         model = models.GrandSetSeriesModel
         fields = "__all__"
-        depth = 1
 
 
 class GrandSetSerializer(serializers.ModelSerializer):
-    activities = ActivitySerializer(read_only=True, many=True)
-    activities_id = serializers.PrimaryKeyRelatedField(
-        queryset=models.ActivityModel.objects.all(),
-        source='activities',
-        required=False,
-        allow_null=True,
-        many=True
-    )
+    # activities = ActivitySerializer(read_only=True, many=True)
+    # activities_id = serializers.PrimaryKeyRelatedField(
+    #     queryset=models.ActivityModel.objects.all(),
+    #     source='activities',
+    #     required=False,
+    #     allow_null=True,
+    #     many=True
+    # )
 
     grand_set_series = GrandSetSeriesSerializer(read_only=True)
     grand_set_series_id = serializers.PrimaryKeyRelatedField(
