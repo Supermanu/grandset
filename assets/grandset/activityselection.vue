@@ -19,90 +19,92 @@
 
 <template>
     <div>
-        <b-row>
-            <b-col>
-                <h5>Activités disponibles</h5>
-                <b-input-group>
-                    <b-form-input
-                        placeholder="Rechercher une activité"
-                        v-model="search"
-                    />
+        <b-overlay :show="loading">
+            <b-row>
+                <b-col>
+                    <h5>Activités disponibles</h5>
+                    <b-input-group>
+                        <b-form-input
+                            placeholder="Rechercher une activité"
+                            v-model="search"
+                        />
 
-                    <template v-slot:append>
-                        <b-button
-                            v-if="search"
-                            size="sm"
-                            variant="outline-danger"
-                            @click="search = ''"
+                        <template #append>
+                            <b-button
+                                v-if="search"
+                                size="sm"
+                                variant="outline-danger"
+                                @click="search = ''"
+                            >
+                                <small>
+                                    <b-icon icon="backspace" />
+                                </small>
+                            </b-button>
+                        </template>
+                        <template #prepend>
+                            <b-input-group-text>
+                                <b-icon icon="search" />
+                            </b-input-group-text>
+                        </template>
+                    </b-input-group>
+                    <b-list-group class="pt-1">
+                        <b-list-group-item
+                            v-for="(activity, index) in filteredActivities"
+                            :key="activity.id"
+                            class="d-flex justify-content-between"
                         >
-                            <small>
-                                <b-icon icon="backspace" />
-                            </small>
-                        </b-button>
-                    </template>
-                    <template v-slot:prepend>
-                        <b-input-group-text>
-                            <b-icon icon="search" />
-                        </b-input-group-text>
-                    </template>
-                </b-input-group>
-                <b-list-group class="pt-1">
-                    <b-list-group-item
-                        v-for="(activity, index) in filteredActivities"
-                        :key="activity.id"
-                        class="d-flex justify-content-between"
-                    >
-                        {{ activity.activity_name }}
-                        <span>
-                            <b-btn
-                                size="sm"
-                                variant="primary"
-                                @click="addActivity(index)"
-                            >
-                                <b-icon icon="arrow-right" />
-                            </b-btn>
-                        </span>
-                    </b-list-group-item>
-                </b-list-group>
-            </b-col>
-            <b-col>
-                <h5>Activités sélectionnées</h5>
-                <div class="text-right">
-                    <b-btn
-                        variant="outline-success"
-                        v-b-modal.creation-activity-modal
-                    >
-                        <b-icon icon="plus" />
-                        Créer une activité
-                    </b-btn>
-                </div>
-                <b-list-group class="pt-1">
-                    <b-list-group-item
-                        v-for="(activity, index) in value"
-                        :key="activity.id"
-                        class="d-flex justify-content-between"
-                    >
-                        <span>
-                            <b-btn
-                                size="sm"
-                                variant="primary"
-                                @click="removeActivity(index)"
-                            >
-                                <b-icon icon="arrow-left" />
-                            </b-btn>
-                        </span>
-                        {{ activity.activity_name }}
+                            {{ activity.activity_name }}
+                            <span>
+                                <b-btn
+                                    size="sm"
+                                    variant="primary"
+                                    @click="addActivity(index)"
+                                >
+                                    <b-icon icon="arrow-right" />
+                                </b-btn>
+                            </span>
+                        </b-list-group-item>
+                    </b-list-group>
+                </b-col>
+                <b-col>
+                    <h5>Activités sélectionnées</h5>
+                    <div class="text-right">
                         <b-btn
-                            size="sm"
-                            variant="outline-secondary"
-                            @click="openModal(activity)"
+                            variant="outline-success"
+                            v-b-modal.creation-activity-modal
                         >
-                            <b-icon icon="pencil-square" />
+                            <b-icon icon="plus" />
+                            Créer une activité
                         </b-btn>
-                    </b-list-group-item>
-                </b-list-group>
-            </b-col>
-        </b-row>
+                    </div>
+                    <b-list-group class="pt-1">
+                        <b-list-group-item
+                            v-for="(activity, index) in value"
+                            :key="activity.id"
+                            class="d-flex justify-content-between"
+                        >
+                            <span>
+                                <b-btn
+                                    size="sm"
+                                    variant="primary"
+                                    @click="removeActivity(index)"
+                                >
+                                    <b-icon icon="arrow-left" />
+                                </b-btn>
+                            </span>
+                            {{ activity.activity_name }}
+                            <b-btn
+                                size="sm"
+                                variant="outline-secondary"
+                                @click="openModal(activity)"
+                            >
+                                <b-icon icon="pencil-square" />
+                            </b-btn>
+                        </b-list-group-item>
+                    </b-list-group>
+                </b-col>
+            </b-row>
+        </b-overlay>
         <b-modal
             id="creation-activity-modal"
             size="lg"
@@ -296,6 +298,7 @@ export default {
                 average_time: null,
                 responsibles: null,
             },
+            loading: true,
         };
     },
     watch: {
@@ -414,8 +417,11 @@ export default {
             // Load all activities available.
             axios.get("/grandset/api/activity/")
                 .then(resp => {
-                    const selectedActivities = this.value.map(a => a.id);
-                    this.availActivities = resp.data.results.filter(a => !selectedActivities.includes(a.id));
+                    const selectedActivities = resp.data.results.filter(r => this.value.includes(r.id));
+                    this.availActivities = resp.data.results.filter(a => !this.value.includes(a.id));
+                    this.$emit("input", selectedActivities);
+                    this.$emit("update");
+                    this.loading = false;
                 });
         }
     },

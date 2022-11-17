@@ -25,6 +25,17 @@
                     <h3>Séries de {{ $store.state.settings.grand_set_name }}</h3>
                 </b-col>
             </b-row>
+            <b-row class="mb-2">
+                <b-col>
+                    <b-btn
+                        to="/grand_set_series_creation/-1/"
+                        variant="success"
+                    >
+                        <b-icon icon="plus" />
+                        Ajouter
+                    </b-btn>
+                </b-col>
+            </b-row>
             <b-row>
                 <b-col>
                     <ul>
@@ -59,6 +70,14 @@
                                     >
                                         Voir
                                     </b-btn>
+                                    <b-btn
+                                        variant="danger"
+                                        size="sm"
+                                        class="ml-4"
+                                        @click="removeSerie(s.id)"
+                                    >
+                                        <b-icon icon="trash" />
+                                    </b-btn>
                                 </span>
                             </b-card-body>
                         </b-card>
@@ -73,11 +92,37 @@
 import Moment from "moment";
 import axios from "axios";
 
+const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+
 export default {
     data: function () {
         return {
             series: []
         };
+    },
+    methods: {
+        removeSerie: function (serieId) {
+            this.$bvModal.msgBoxConfirm("Êtes-vous sûr de vouloir supprimer cette série ?", {
+                title: "Suppression de la série",
+                okVariant: "danger",
+                okTitle: "Oui",
+                cancelTitle: "Non",
+                footerClass: "p-2",
+                hideHeaderClose: false,
+                centered: true
+            })
+                .then(response => {
+                    if (response) {
+                        this.series.splice(this.series.findIndex(s => s.id === serieId), 1);
+                        axios.delete(`/grandset/api/grandset_series/${serieId}/`, token);
+                    }
+                })
+                .catch(err => {
+                    // An error occurred
+                    console.log(err);
+                });
+            return;
+        }
     },
     mounted: function () {
         axios.get("/grandset/api/grandset_series/")

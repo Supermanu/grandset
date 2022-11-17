@@ -34,7 +34,7 @@
                             v-model="search"
                         />
 
-                        <template v-slot:append>
+                        <template #append>
                             <b-input-group-text>
                                 <b-icon icon="search" />
                             </b-input-group-text>
@@ -50,7 +50,7 @@
                         block
                         no-caret
                     >
-                        <template v-slot:button-content>
+                        <template #button-content>
                             <b-icon icon="list" />
                             Options
                         </template>
@@ -135,10 +135,14 @@ export default {
         }
     },
     mounted: function () {
-        axios.get(`/grandset/api/grandset/${this.grandSetId}/`)
-            .then(resp => {
-                this.grandSet = resp.data;
-            });
+        Promise.all([
+            axios.get(`/grandset/api/grandset/${this.grandSetId}/`),
+            axios.get("/grandset/api/activity/")
+        ]).then(resps => {
+            resps[0].data.activities = resps[1].data.results;
+            this.grandSet = resps[0].data;
+
+        });
     },
     components: {
         ActivityOverview

@@ -28,7 +28,7 @@
                 footer-bg-variant="transparent"
                 no-body
             >
-                <template v-slot:header>
+                <template #header>
                     <div class="opposite">
                         <strong>{{ activity ? activity.activity_name : "Groupes sans activité" }} ({{ groups.length }})</strong>
                         <span>

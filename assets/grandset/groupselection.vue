@@ -18,7 +18,7 @@
 <!-- along with Happyschool.  If not, see <http://www.gnu.org/licenses/>. -->
 
 <template>
-    <div>
+    <b-overlay :show="loading">
         <b-row>
             <b-col>
                 <h5>Groupes disponibles</h5>
@@ -28,7 +28,7 @@
                         v-model="search"
                     />
 
-                    <template v-slot:append>
+                    <template #append>
                         <b-button
                             v-if="search"
                             size="sm"
@@ -40,18 +40,27 @@
                             </small>
                         </b-button>
                     </template>
-                    <template v-slot:prepend>
+                    <template #prepend>
                         <b-input-group-text>
                             <b-icon icon="search" />
                         </b-input-group-text>
                     </template>
                 </b-input-group>
-                <b-list-group class="pt-1">
+                <b-list-group class="pt-1" v-if="!loading">
                     <b-list-group-item
                         v-for="(group, index) in filteredGroups"
                         :key="group.id"
                         class="d-flex justify-content-between"
                     >
+                        <span class="mr-1">
+                            <b-btn
+                                size="sm"
+                                variant="danger"
+                                @click="deleteGroup(index)"
+                            >
+                                <b-icon icon="trash" />
+                            </b-btn>
+                        </span>
                         <span>
                             {{ group.group_name }}:
                             <small>
@@ -81,7 +90,7 @@
                         Créer un groupe
                     </b-btn>
                 </div>
-                <b-list-group class="pt-1">
+                <b-list-group class="pt-1" v-if="!loading">
                     <b-list-group-item
                         v-for="(group, index) in value"
                         :key="group.id"
@@ -160,7 +169,7 @@
                 </b-col>
             </b-form-row>
         </b-modal>
-    </div>
+    </b-overlay>
 </template>
 
 <script>
@@ -200,7 +209,8 @@ export default {
             inputStates: {
                 group_name: null,
                 students: null,
-            }
+            },
+            loading: true,
         };
     },
     watch: {
@@ -283,6 +293,10 @@ export default {
             this.$emit("input", this.value.filter((v, i) => i != groupToRemove));
             this.$emit("update");
         },
+        deleteGroup(groupToDelete) {
+            const group = this.availGroup.splice(groupToDelete, 1);
+            axios.delete(`/grandset/api/group/${group[0].id}/`, token);
+        },
         submit: function (evt) {
             evt.preventDefault();
 
@@ -303,7 +317,6 @@ export default {
                         if (a.id == resp.data.id) a = resp.data;
                         return a;
                     });
-                    console.log(updatedGroups);
                     this.$emit("input", updatedGroups);
                 }
                 this.$nextTick(() => {
@@ -324,8 +337,11 @@ export default {
             // Load all groups available.
             axios.get("/grandset/api/group/")
                 .then(resp => {
-                    const selectedGroups = this.value.map(g => g.id);
-                    this.availGroup = resp.data.results.filter(g => !selectedGroups.includes(g.id));
+                    const selectedGroups = resp.data.results.filter(r => this.value.includes(r.id));
+                    this.availGroup = resp.data.results.filter(r => !this.value.includes(r.id));
+                    this.$emit("input", selectedGroups);
+                    this.$emit("update");
+                    this.loading = false;
                 });
         }
     },

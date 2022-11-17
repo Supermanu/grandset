@@ -188,7 +188,7 @@
                     />
                 </b-col>
             </b-row>
-            <b-row v-if="ready && series">
+            <b-row v-if="series">
                 <b-col>
                     <group-selection
                         v-model="groups"
@@ -288,12 +288,12 @@ export default {
                 name: this.name,
                 date_start: this.date_start,
                 date_end: this.date_end,
-                activities_id: this.activities.map(a => a.id),
-                groups_id: this.groups.map(g => g.id),
+                activities: this.activities.map(a => a.id),
+                groups: this.groups.map(g => g.id),
             } :
                 {
                     date: this.date,
-                    activities_id: this.activities.map(a => a.id),
+                    activities: this.activities.map(a => a.id),
                     grand_set_series_id: this.grandSetSeriesId
                 };
 
@@ -335,7 +335,7 @@ export default {
         },
         initComponent: function () {
             if (this.series) {
-                if (this.objectId) {
+                if (Number(this.objectId) > 0) {
                     Promise.all([
                         axios.get(`/grandset/api/grandset_series/${this.objectId}`),
                         axios.get(`/grandset/api/grandset/?grand_set_series=${this.objectId}`)
