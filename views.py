@@ -153,9 +153,8 @@ class ActivityStatAPI(APIView):
             Q(
                 grand_set__in=grand_sets.all(),
                 activity__in=current_grand_set.activities.all(),
-                status="DON",
             )
-            & filter_fields
+            & filter_fields & (Q(status="DON") | Q(status="ON"))
         )
         if student:
             targeted_logs = targeted_logs.exclude(missing_student=s)

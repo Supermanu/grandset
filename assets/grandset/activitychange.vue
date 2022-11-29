@@ -248,12 +248,11 @@ export default {
                             });
 
                         // Get activity history for the current group.
-                        const filters = this.group ? `group=${this.groupId}` : `student=${this.studentId}`;
+                        const filters = this.groupId > 0 ? `group=${this.groupId}` : `student=${this.studentId}`;
                         axios.get(`/grandset/api/activity_log/?${filters}&ordering=-datetime_update`)
                             .then(respLogs => {
                                 this.logs = respLogs.data.results.filter(log => {
-                                    return activities.find(a => a.id == log.activity)
-                                        && this.grandSetId == log.grand_set;
+                                    return activities.find(a => a.id == log.activity);
                                 }).map(log => {
                                     log.activity = activities.find(a => a.id == log.activity);
                                     return log;
