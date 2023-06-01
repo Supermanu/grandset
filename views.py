@@ -40,13 +40,13 @@ from . import models, serializers
 
 def get_menu_entry(active_app: str, request) -> dict:
     entry_name = get_settings().grand_set_name
-    if not request.user.has_perm('grandset.view_grandsetmodel'):
+    if not request.user.has_perm("grandset.view_grandsetmodel"):
         return {}
     return {
-            "app": "grandset",
-            "display": f"{entry_name}",
-            "url": "/grandset",
-            "active": active_app == "grandset"
+        "app": "grandset",
+        "display": f"{entry_name}",
+        "url": "/grandset",
+        "active": active_app == "grandset",
     }
 
 
@@ -54,18 +54,16 @@ def get_settings():
     return get_app_settings(models.GrandSetSettingsModel)
 
 
-class GrandSetView(
-    LoginRequiredMixin,
-    PermissionRequiredMixin,
-    TemplateView
-):
+class GrandSetView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = "grandset/grandset.html"
-    permission_required = ('grandset.view_grandsetmodel',)
+    permission_required = ("grandset.view_grandsetmodel",)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        context['menu'] = json.dumps(get_menu(self.request, "grandset"))
-        context['settings'] = json.dumps((serializers.GrandSetSettingsSerializer(get_settings()).data))
+        context["menu"] = json.dumps(get_menu(self.request, "grandset"))
+        context["settings"] = json.dumps(
+            (serializers.GrandSetSettingsSerializer(get_settings()).data)
+        )
         return context
 
 
@@ -88,14 +86,16 @@ class ActivityViewSet(BaseViewSet):
 class StudentFilter(filters.ModelChoiceFilter):
     def filter(self, qs, value):
         if value:
-            return qs.filter(
-                Q(student=value) | Q(group__students=value)
-            ).exclude(missing_student=value)
+            return qs.filter(Q(student=value) | Q(group__students=value)).exclude(
+                missing_student=value
+            )
         return qs
 
 
 class ActivityLogFilters(filters.FilterSet):
-    status = filters.MultipleChoiceFilter(choices=models.ActivityLogModel.STATUS_CHOICES)
+    status = filters.MultipleChoiceFilter(
+        choices=models.ActivityLogModel.STATUS_CHOICES
+    )
     student = StudentFilter(queryset=StudentModel.objects.all())
 
     class Meta:
@@ -106,14 +106,14 @@ class ActivityLogFilters(filters.FilterSet):
 class ActivityLogViewSet(BaseViewSet):
     queryset = models.ActivityLogModel.objects.all()
     serializer_class = serializers.ActivityLogSerializer
-    filter_class = ActivityLogFilters
+    filterset_class = ActivityLogFilters
     ordering_fields = ["datetime_update"]
 
 
 class ActivityEvaluationViewSet(BaseViewSet):
     queryset = models.ActivityEvaluationModel.objects.all()
     serializer_class = serializers.ActivityEvaluationSerializer
-    filterset_fields = ['student', 'activity_log']
+    filterset_fields = ["student", "activity_log"]
 
 
 class GrandSetFilters(BaseFilters):
@@ -127,7 +127,7 @@ class GrandSetFilters(BaseFilters):
 class GrandSetViewSet(BaseViewSet):
     queryset = models.GrandSetModel.objects.all()
     serializer_class = serializers.GrandSetSerializer
-    filter_class = GrandSetFilters
+    filterset_class = GrandSetFilters
 
 
 class GrandSetSeriesViewSet(BaseViewSet):
@@ -154,7 +154,8 @@ class ActivityStatAPI(APIView):
                 grand_set__in=grand_sets.all(),
                 activity__in=current_grand_set.activities.all(),
             )
-            & filter_fields & (Q(status="DON") | Q(status="ON"))
+            & filter_fields
+            & (Q(status="DON") | Q(status="ON"))
         )
         if student:
             targeted_logs = targeted_logs.exclude(missing_student=s)
@@ -166,15 +167,14 @@ class ActivityStatAPI(APIView):
 
         # Get all logs from running activities or soon to be.
         activity_participant = models.ActivityLogModel.objects.filter(
-            grand_set=current_grand_set,
-            status__in=["IN", "ON"]
+            grand_set=current_grand_set, status__in=["IN", "ON"]
         )
 
         # Count the number of student from both groups and lonely students in running activities.
         activity_participant_count = list(
             activity_participant.values("activity").annotate(
                 count_participant_from_group=Count("group__students"),
-                count_participant_from_student=Count("student")
+                count_participant_from_student=Count("student"),
             )
         )
 
@@ -182,8 +182,12 @@ class ActivityStatAPI(APIView):
         for g in logs_count:
             # Find related activity.
             activity_index = next(
-                (index for (index, d) in enumerate(activities) if d["activity"] == g["activity"]),
-                None
+                (
+                    index
+                    for (index, d) in enumerate(activities)
+                    if d["activity"] == g["activity"]
+                ),
+                None,
             )
             if activity_index:
                 activities[activity_index]["count_log"] = g["count_log"]
@@ -197,9 +201,11 @@ class GroupWithoutActivityAPI(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, grand_set, format=None):
-        running_groups = models.ActivityLogModel.objects \
-            .filter(grand_set=grand_set, group__isnull=False) \
-            .values_list("group", flat=True)
-        grand_set_series_group = models.GrandSetModel.objects.get(id=grand_set).grand_set_series.groups.all()
+        running_groups = models.ActivityLogModel.objects.filter(
+            grand_set=grand_set, group__isnull=False
+        ).values_list("group", flat=True)
+        grand_set_series_group = models.GrandSetModel.objects.get(
+            id=grand_set
+        ).grand_set_series.groups.all()
         groups = grand_set_series_group.exclude(pk__in=running_groups)
         return Response(serializers.GroupSerializer(groups, many=True).data)
