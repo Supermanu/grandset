@@ -17,20 +17,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with Happyschool.  If not, see <http://www.gnu.org/licenses/>.
 
-import Vue from "vue";
-import VueRouter from "vue-router";
+import GrandSetCreation from "../grandsetcreation.vue";
+import GrandSet from "../grandset.vue";
+import GrandSetSeries from "../grandsetseries.vue";
+import ActivityChange from "../activitychange.vue";
+import ActivityManagement from "../activitymanagement.vue";
+import Evaluation from "../evaluation.vue";
+import Recommendation from "../recommendation.vue";
 
-Vue.use(VueRouter);
+import { createRouter, createWebHashHistory } from "vue-router";
 
-import GrandSetCreation from "./grandsetcreation.vue";
-import GrandSet from "./grandset.vue";
-import GrandSetSeries from "./grandsetseries.vue";
-import ActivityChange from "./activitychange.vue";
-import ActivityManagement from "./activitymanagement.vue";
-import Evaluation from "./evaluation.vue";
-import Recommendation from "./recommendation.vue";
-
-export default new VueRouter({
+const router = createRouter({
     routes: [
         {
             path: "",
@@ -82,5 +79,8 @@ export default new VueRouter({
             component: Recommendation,
             props: true
         }
-    ]
+    ],
+    history: createWebHashHistory(),
 });
+
+export default router;

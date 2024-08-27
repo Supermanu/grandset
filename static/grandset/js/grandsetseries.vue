@@ -22,7 +22,7 @@
         <b-container>
             <b-row>
                 <b-col>
-                    <h3>Séries de {{ $store.state.settings.grand_set_name }}</h3>
+                    <h3>Séries de {{ store.settings.grand_set_name }}</h3>
                 </b-col>
             </b-row>
             <b-row class="mb-2">
@@ -40,9 +40,9 @@
                 <b-col>
                     <ul>
                         <b-card
-                            no-body
                             v-for="s in series"
                             :key="s.id"
+                            no-body
                         >
                             <b-card-body
                                 class="d-flex justify-content-between"
@@ -92,13 +92,32 @@
 import Moment from "moment";
 import axios from "axios";
 
+import { grandsetStore } from "./stores/index.js";
+
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
 
 export default {
     data: function () {
         return {
-            series: []
+            series: [],
+            store: grandsetStore(),
         };
+    },
+    mounted: function () {
+        axios.get("/grandset/api/grandset_series/")
+            .then(resp => {
+                this.series = resp.data.results.map(s => {
+                    s.last_grand_set = null;
+                    return s;
+                });
+                const last_grand_set = this.series.map(s => axios.get(`/grandset/api/grandset/?grand_set_series=${s.id}&date__gte=${Moment().format("L")}`));
+                Promise.all(last_grand_set)
+                    .then(resps => {
+                        resps.forEach((gS, idx) => {
+                            this.series[idx].last_grand_set = gS.data.count > 0 ? gS.data.results[0].id : null;
+                        });
+                    });
+            });
     },
     methods: {
         removeSerie: function (serieId) {
@@ -123,22 +142,6 @@ export default {
                 });
             return;
         }
-    },
-    mounted: function () {
-        axios.get("/grandset/api/grandset_series/")
-            .then(resp => {
-                this.series = resp.data.results.map(s => {
-                    s.last_grand_set = null;
-                    return s;
-                });
-                const last_grand_set = this.series.map(s => axios.get(`/grandset/api/grandset/?grand_set_series=${s.id}&date__gte=${Moment().format("L")}`));
-                Promise.all(last_grand_set)
-                    .then(resps => {
-                        resps.forEach((gS, idx) => {
-                            this.series[idx].last_grand_set = gS.data.count > 0 ? gS.data.results[0].id : null;
-                        });
-                    });
-            });
     },
 };
 </script>

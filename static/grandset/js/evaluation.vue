@@ -42,7 +42,7 @@
                 >
                     <b-col>
                         <b-form-group
-                            :label="`Évaluation de ${this.group ? this.group.group_name : this.student.display}`"
+                            :label="`Évaluation de ${group ? group.group_name : student.display}`"
                             label-cols-sm="4"
                             label-align-sm="center"
                             label-class="font-weight-bold"
@@ -53,8 +53,8 @@
                                 <competence-evaluation
                                     v-for="comp in activity.competence"
                                     :key="comp.id"
-                                    :comp-name="comp.name"
                                     v-model="generalEval[comp.id]"
+                                    :comp-name="comp.name"
                                     label-cols-md="4"
                                     label-align-md="right"
                                     @input="updateIndividual(generalEval[comp.id], comp.id)"
@@ -62,14 +62,14 @@
                             </div>
                             <div v-else>
                                 <b-input-group
-                                    :append="'/ ' + $store.state.settings.max_points"
+                                    :append="'/ ' + store.settings.max_points"
                                 >
                                     <b-form-input
                                         v-model="generalEval"
                                         type="number"
                                         step="0.01"
                                         min="0"
-                                        :max="$store.state.settings.max_points"
+                                        :max="store.settings.max_points"
                                         @input="updateIndividual"
                                     />
                                 </b-input-group>
@@ -94,9 +94,9 @@
                                 >
                                     <slot name="label">
                                         <b-form-checkbox
+                                            v-model="individualEval[index]"
                                             switch
                                             class="mr-n2"
-                                            v-model="individualEval[index]"
                                         >
                                             {{ students[index].display }}
                                         </b-form-checkbox>
@@ -105,8 +105,8 @@
                                         <competence-evaluation
                                             v-for="comp in activity.competence"
                                             :key="comp.id"
-                                            :comp-name="comp.name"
                                             v-model="evaluation[index][comp.id]"
+                                            :comp-name="comp.name"
                                             label-cols-md="4"
                                             label-align-md="right"
                                             :disabled="!individualEval[index]"
@@ -114,14 +114,14 @@
                                     </div>
                                     <div v-else>
                                         <b-input-group
-                                            :append="'/ ' + $store.state.settings.max_points"
+                                            :append="'/ ' + store.settings.max_points"
                                         >
                                             <b-form-input
+                                                v-model="evaluation[index]"
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
-                                                :max="$store.state.settings.max_points"
-                                                v-model="evaluation[index]"
+                                                :max="store.settings.max_points"
                                                 :readonly="!individualEval[index]"
                                             />
                                         </b-input-group>
@@ -151,9 +151,14 @@ import axios from "axios";
 
 import CompetenceEvaluation from "./compeval.vue";
 
+import { grandsetStore } from "./stores/index.js";
+
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
 
 export default {
+    components: {
+        CompetenceEvaluation
+    },
     props: {
         activityLogId: {
             type: String,
@@ -180,6 +185,7 @@ export default {
             individualEval: [],
             evaluation: [],
             generalEval: null,
+            store: grandsetStore(),
         };
     },
     computed: {
@@ -187,66 +193,6 @@ export default {
             if (!this.group) return [];
 
             return this.group.students.filter(s => !this.activityLog.missing_student.includes(s.matricule));
-        }
-    },
-    methods: {
-        updateIndividual: function (value, compet=null) {
-            this.individualEval.forEach((toNotUpdate, index) => {
-                if (toNotUpdate) return;
-
-                if (this.useCompetencies) {
-                    this.evaluation[index][compet] = value;
-                } else {
-                    this.evaluation[index] = value;
-                }
-            });
-        },
-        sendData: function () {
-            let evalPromises = [];
-            if (this.activityEvaluation.length) {
-                evalPromises = this.activityEvaluation.map((aEv, index) => {
-                    let data = {
-                        activity_log: this.activityLogId,
-                        student: this.group ?
-                            this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
-                            : this.student.matricule,
-                    };
-                    if (this.useCompetencies) {
-                        data.competence_evaluation = this.evaluation[index];
-                    } else {
-                        data.evaluation = this.evaluation[index];
-                    }
-                    return axios.put(`/grandset/api/activity_evaluation/${aEv.id}/`, data, token);
-                });
-            } else {
-                evalPromises = this.evaluation.map((ev, index) => {
-                    let data = {
-                        activity_log: this.activityLogId,
-                        student: this.group ?
-                            this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
-                            : this.student.matricule,
-                    };
-                    if (this.useCompetencies) {
-                        data.competence_evaluation = ev;
-                    } else {
-                        data.evaluation = ev;
-                    }
-                    return axios.post("/grandset/api/activity_evaluation/", data, token);
-                });
-            }
-
-            Promise.all(evalPromises)
-                .then(() => {
-                    this.$router.push(`/activitymanagement/${this.activityLog.grand_set}/${this.activityLog.activity}/`, () => {
-                        this.$root.$bvToast.toast(
-                            "Les données ont bien été enregistrées.",
-                            {
-                                variant: "success",
-                                noCloseButton: true,
-                            }
-                        );
-                    });
-                });
         }
     },
     mounted: function () {
@@ -308,8 +254,65 @@ export default {
                 console.log(err);
             });
     },
-    components: {
-        CompetenceEvaluation
+    methods: {
+        updateIndividual: function (value, compet=null) {
+            this.individualEval.forEach((toNotUpdate, index) => {
+                if (toNotUpdate) return;
+
+                if (this.useCompetencies) {
+                    this.evaluation[index][compet] = value;
+                } else {
+                    this.evaluation[index] = value;
+                }
+            });
+        },
+        sendData: function () {
+            let evalPromises = [];
+            if (this.activityEvaluation.length) {
+                evalPromises = this.activityEvaluation.map((aEv, index) => {
+                    let data = {
+                        activity_log: this.activityLogId,
+                        student: this.group ?
+                            this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
+                            : this.student.matricule,
+                    };
+                    if (this.useCompetencies) {
+                        data.competence_evaluation = this.evaluation[index];
+                    } else {
+                        data.evaluation = this.evaluation[index];
+                    }
+                    return axios.put(`/grandset/api/activity_evaluation/${aEv.id}/`, data, token);
+                });
+            } else {
+                evalPromises = this.evaluation.map((ev, index) => {
+                    let data = {
+                        activity_log: this.activityLogId,
+                        student: this.group ?
+                            this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
+                            : this.student.matricule,
+                    };
+                    if (this.useCompetencies) {
+                        data.competence_evaluation = ev;
+                    } else {
+                        data.evaluation = ev;
+                    }
+                    return axios.post("/grandset/api/activity_evaluation/", data, token);
+                });
+            }
+
+            Promise.all(evalPromises)
+                .then(() => {
+                    this.$router.push(`/activitymanagement/${this.activityLog.grand_set}/${this.activityLog.activity}/`, () => {
+                        this.$root.$bvToast.toast(
+                            "Les données ont bien été enregistrées.",
+                            {
+                                variant: "success",
+                                noCloseButton: true,
+                            }
+                        );
+                    });
+                });
+        }
     }
 };
 </script>

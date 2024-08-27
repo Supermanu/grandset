@@ -23,7 +23,7 @@
             <b-row>
                 <b-col>
                     <b-btn :to="`/grand_set/${grandSetId}/`">
-                        Retour au {{ $store.state.settings.grand_set_name }}
+                        Retour au {{ store.settings.grand_set_name }}
                     </b-btn>
                 </b-col>
             </b-row>
@@ -82,8 +82,8 @@
                                 </div>
                                 <div v-else>
                                     <b-btn
-                                        @click="changeStatus(index, 'ON')"
                                         variant="info"
+                                        @click="changeStatus(index, 'ON')"
                                     >
                                         <b-icon
                                             icon="box-arrow-in-right"
@@ -104,6 +104,8 @@
 <script>
 import axios from "axios";
 
+import { grandsetStore } from "./stores/index.js";
+
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
 
 export default {
@@ -120,41 +122,9 @@ export default {
     data: function () {
         return {
             activity: null,
-            logs: []
+            logs: [],
+            store: grandsetStore(),
         };
-    },
-    methods: {
-        displayStudents: function (log) {
-            return log.group.students_display.filter((s, i) => !log.missing_student.includes(log.group.students_id[i])).join(", ");
-        },
-        changeStatus: function (logIndex, newStatus) {
-            const group = this.logs[logIndex].group;
-
-            if (!this.$store.state.settings.return_to_hq && newStatus === "OUT") {
-                this.$router.push(`/activitychange/${this.grandSetId}/${group ? group.id : "-1"}/${this.logs[logIndex].id}/`);
-                return;
-            }
-
-            axios.patch(`/grandset/api/activity_log/${this.logs[logIndex].id}/`, {status: newStatus}, token)
-                .then(resp => {
-                    let newLog = resp.data;
-                    newLog.group = group;
-
-                    if (newStatus == "ON") {
-                        this.logs.splice(logIndex, 1, newLog);
-                        this.logs.sort((a, b) => a.status > b.status);
-                    } else if (newStatus == "OUT") {
-                        this.$root.$bvToast.toast(
-                            `${group ? group.group_name : this.logs[logIndex].student.last_name} n'est plus dans l'activité ${this.activity.activity_name}`,
-                            {
-                                variant: "warning",
-                                noCloseButton: true,
-                            }
-                        );
-                        this.logs.splice(logIndex, 1);
-                    }
-                });
-        }
     },
     mounted: function () {
         axios.get(`/grandset/api/activity/${this.activityId}/`)
@@ -180,6 +150,39 @@ export default {
                     });
 
             });
+    },
+    methods: {
+        displayStudents: function (log) {
+            return log.group.students_display.filter((s, i) => !log.missing_student.includes(log.group.students_id[i])).join(", ");
+        },
+        changeStatus: function (logIndex, newStatus) {
+            const group = this.logs[logIndex].group;
+
+            if (!this.store.settings.return_to_hq && newStatus === "OUT") {
+                this.$router.push(`/activitychange/${this.grandSetId}/${group ? group.id : "-1"}/${this.logs[logIndex].id}/`);
+                return;
+            }
+
+            axios.patch(`/grandset/api/activity_log/${this.logs[logIndex].id}/`, {status: newStatus}, token)
+                .then(resp => {
+                    let newLog = resp.data;
+                    newLog.group = group;
+
+                    if (newStatus == "ON") {
+                        this.logs.splice(logIndex, 1, newLog);
+                        this.logs.sort((a, b) => a.status > b.status);
+                    } else if (newStatus == "OUT") {
+                        this.$root.$bvToast.toast(
+                            `${group ? group.group_name : this.logs[logIndex].student.last_name} n'est plus dans l'activité ${this.activity.activity_name}`,
+                            {
+                                variant: "warning",
+                                noCloseButton: true,
+                            }
+                        );
+                        this.logs.splice(logIndex, 1);
+                    }
+                });
+        }
     }
 };
 </script>

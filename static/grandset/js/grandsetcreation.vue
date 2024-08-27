@@ -25,7 +25,7 @@
                     <h3>
                         Préparer
                         {{ series ? "une série" : "un" }}
-                        {{ $store.state.settings.grand_set_name }}
+                        {{ store.settings.grand_set_name }}
                     </h3>
                 </b-col>
             </b-row>
@@ -47,9 +47,9 @@
                     align-self="end"
                 >
                     <b-btn
-                        @click="submit"
                         variant="primary"
                         :disabled="!hasChanged"
+                        @click="submit"
                     >
                         Sauver
                     </b-btn>
@@ -64,11 +64,13 @@
                                 :state="inputStates.name"
                             >
                                 <b-form-input
-                                    type="text"
                                     v-model="name"
+                                    type="text"
                                     @update="hasChanged = true"
                                 />
-                                <span slot="invalid-feedback">{{ errorMsg("name") }}</span>
+                                <template #invalid-feedback>
+                                    {{ errorMsg("name") }}
+                                </template>
                             </b-form-group>
                         </b-col>
                     </b-form-row>
@@ -79,11 +81,13 @@
                                 :state="inputStates.date_start"
                             >
                                 <b-form-input
-                                    type="date"
                                     v-model="date_start"
+                                    type="date"
                                     @update="hasChanged = true"
                                 />
-                                <span slot="invalid-feedback">{{ errorMsg("date_start") }}</span>
+                                <template #invalid-feedback>
+                                    {{ errorMsg("date_start") }}
+                                </template>
                             </b-form-group>
                         </b-col>
                         <b-col>
@@ -92,11 +96,13 @@
                                 :state="inputStates.date_end"
                             >
                                 <b-form-input
-                                    type="date"
                                     v-model="date_end"
+                                    type="date"
                                     @update="hasChanged = true"
                                 />
-                                <span slot="invalid-feedback">{{ errorMsg("date_end") }}</span>
+                                <template #invalid-feedback>
+                                    {{ errorMsg("date_end") }}
+                                </template>
                             </b-form-group>
                         </b-col>
                     </b-form-row>
@@ -107,11 +113,13 @@
                                 :state="inputStates.date"
                             >
                                 <b-form-input
-                                    type="date"
                                     v-model="date"
+                                    type="date"
                                     @update="hasChanged = true"
                                 />
-                                <span slot="invalid-feedback">{{ errorMsg("date") }}</span>
+                                <template #invalid-feedback>
+                                    {{ errorMsg("date") }}
+                                </template>
                             </b-form-group>
                         </b-col>
                     </b-form-row>
@@ -123,7 +131,7 @@
             >
                 <b-row>
                     <b-col>
-                        <h5>{{ $store.state.settings.grand_set_name }} de la série</h5>
+                        <h5>{{ store.settings.grand_set_name }} de la série</h5>
                     </b-col>
                 </b-row>
                 <b-row
@@ -139,10 +147,10 @@
                                 icon="plus"
                             />
                             <span v-if="objectId !== '-1'">
-                                Ajouter un {{ $store.state.settings.grand_set_name }}
+                                Ajouter un {{ store.settings.grand_set_name }}
                             </span>
                             <span v-else>
-                                Enregistrer avant d'ajouter un {{ $store.state.settings.grand_set_name }}
+                                Enregistrer avant d'ajouter un {{ store.settings.grand_set_name }}
                             </span>
                         </b-btn>
                     </b-col>
@@ -150,9 +158,9 @@
                 <b-row>
                     <b-col>
                         <b-card
-                            no-body
                             v-for="gs in grandSets"
                             :key="gs.id"
+                            no-body
                         >
                             <b-card-text class="p-1">
                                 <b-row>
@@ -183,16 +191,20 @@
             >
                 <b-col>
                     <activity-selection
-                        v-model="activities"
-                        @update="hasChanged = true"
+                        v-if="ready"
+                        :model-value="activities"
+                        @update:model-value="newValue => activities = newValue"
+                        @update:state="hasChanged = true"
                     />
                 </b-col>
             </b-row>
             <b-row v-if="series">
                 <b-col>
                     <group-selection
-                        v-model="groups"
-                        @update="hasChanged = true"
+                        v-if="ready"
+                        :model-value="groups"
+                        @update:model-value="newValue => groups = newValue"
+                        @update:state="hasChanged = true"
                     />
                 </b-col>
             </b-row>
@@ -206,9 +218,23 @@ import axios from "axios";
 import ActivitySelection from "./activityselection.vue";
 import GroupSelection from "./groupselection.vue";
 
+import { grandsetStore } from "./stores/index.js";
+
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
 
 export default {
+    components: {
+        ActivitySelection,
+        GroupSelection,
+    },
+    beforeRouteLeave (to, from, next) {
+        if (this.hasChanged && this.objectId !== "-1") {
+            if (!confirm("Des données n'ont pas été enregistrées, êtes-vous sûr de vouloir quitter la page ?")) {
+                next(false);
+            }
+        }
+        next();
+    },
     props: {
         series: {
             type: Boolean,
@@ -244,11 +270,8 @@ export default {
                 groups: null,
             },
             errors: {},
+            store: grandsetStore(),
         };
-    },
-    components: {
-        ActivitySelection,
-        GroupSelection,
     },
     watch: {
         /**
@@ -268,6 +291,9 @@ export default {
         series: function () {
             this.initComponent();
         }
+    },
+    mounted: function () {
+        this.initComponent();
     },
     methods: {
         /** 
@@ -372,17 +398,6 @@ export default {
                 }
             }
         }
-    },
-    mounted: function () {
-        this.initComponent();
-    },
-    beforeRouteLeave (to, from, next) {
-        if (this.hasChanged && this.objectId !== "-1") {
-            if (!confirm("Des données n'ont pas été enregistrées, êtes-vous sûr de vouloir quitter la page ?")) {
-                next(false);
-            }
-        }
-        next();
     }
 };
 </script>

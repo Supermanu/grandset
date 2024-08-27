@@ -16,15 +16,27 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with Happyschool.  If not, see <http://www.gnu.org/licenses/>.
-
 import Vue from "vue";
-import Vuex from "vuex";
+import { BootstrapVue, BootstrapVueIcons } from "bootstrap-vue";
 
-Vue.use(Vuex);
+import "bootstrap/dist/css/bootstrap.css";
+import "bootstrap-vue/dist/bootstrap-vue.css";
 
-export default new Vuex.Store({
-    state: {
-        // eslint-disable-next-line no-undef
-        settings: settings,
-    }
-});
+Vue.use(BootstrapVue);
+Vue.use(BootstrapVueIcons);
+
+import { createPinia } from "pinia";
+
+const pinia = createPinia();
+
+import router from "./router/index.js";
+
+import { createApp } from "vue";
+import GrandsetPage from "./GrandsetPage.vue";
+
+const app = createApp(GrandsetPage);
+
+app.use(router);
+app.use(pinia);
+
+app.mount("#vue-app");

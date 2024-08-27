@@ -1,11 +1,15 @@
 {% extends "core/base_vue.html" %}
 
+{% load vite %}
+
 {% block header %}
 <title>HappySchool : Grand Set</title>
 
+{% vite %}
+{% vite "grandset/js/grandset.js" %}
+
 {% endblock %}
 {% block content %}
-{% load render_bundle from webpack_loader %}
 
 <script>
     const current_app = "grandset";
@@ -13,7 +17,5 @@
     const menu = {{ menu|safe }};
 </script>
 <div id="vue-app"></div>
-
-{% render_bundle 'grandset' %}
 
 {% endblock %}

@@ -17,39 +17,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with Happyschool.  If not, see <http://www.gnu.org/licenses/>.
 
-import Vue from "vue";
+import { defineStore } from "pinia";
 
-import store from "../grandset/store.js";
-import router from "../grandset/router.js";
-import Menu from "assets/common/menu_bar.vue";
-
-new Vue({
-    el: "#vue-app",
-    data: {
-        menuInfo: {},
-        transitionName: "slide-left",
-    },
-    store,
-    router,
-    template:`
-    <div>
-        <app-menu :menu-info="menuInfo"></app-menu>
-            <transition :name="transitionName" mode="out-in">
-        <router-view></router-view>
-        </transition>
-    </div>`,
-    mounted: function () {
+export const grandsetStore = defineStore("grandset", {
+    state: () => ({
         // eslint-disable-next-line no-undef
-        this.menuInfo = menu;
-    },
-    components: {
-        "app-menu": Menu,
-    },
-    watch: {
-        "$route" (to, from) {
-            const toDepth = to.path.split("/").length;
-            const fromDepth = from.path.split("/").length;
-            this.transitionName = toDepth < fromDepth ? "slide-right" : "slide-left";
-        }
-    }
+        settings: settings,
+    })
 });

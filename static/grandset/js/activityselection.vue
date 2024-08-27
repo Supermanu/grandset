@@ -25,8 +25,8 @@
                     <h5>Activités disponibles</h5>
                     <b-input-group>
                         <b-form-input
-                            placeholder="Rechercher une activité"
                             v-model="search"
+                            placeholder="Rechercher une activité"
                         />
 
                         <template #append>
@@ -70,8 +70,8 @@
                     <h5>Activités sélectionnées</h5>
                     <div class="text-right">
                         <b-btn
-                            variant="outline-success"
                             v-b-modal.creation-activity-modal
+                            variant="outline-success"
                         >
                             <b-icon icon="plus" />
                             Créer une activité
@@ -79,7 +79,7 @@
                     </div>
                     <b-list-group class="pt-1">
                         <b-list-group-item
-                            v-for="(activity, index) in value"
+                            v-for="(activity, index) in modelValue"
                             :key="activity.id"
                             class="d-flex justify-content-between"
                         >
@@ -120,10 +120,12 @@
                         :state="inputStates.activity_name"
                     >
                         <b-input
-                            type="text"
                             v-model="newActivity.activity_name"
+                            type="text"
                         />
-                        <span slot="invalid-feedback">{{ errorMsg("activity_name") }}</span>
+                        <template #invalid-feedback>
+                            {{ errorMsg("activity_name") }}
+                        </template>
                     </b-form-group>
                     <b-form-group
                         label="Nombre maximum de participants"
@@ -138,13 +140,15 @@
                             </b-input-group-prepend>
 
                             <b-form-input
+                                v-model="newActivity.max_participant"
                                 type="number"
                                 min="1"
                                 step="1"
-                                v-model="newActivity.max_participant"
                             />
                         </b-input-group>
-                        <span slot="invalid-feedback">{{ errorMsg("max_participant") }}</span>
+                        <template #invalid-feedback>
+                            {{ errorMsg("max_participant") }}
+                        </template>
                     </b-form-group>
                     <b-form-group
                         label="Nombre de participation recommandé"
@@ -158,13 +162,15 @@
                             </b-input-group-prepend>
 
                             <b-form-input
+                                v-model="newActivity.recommended_participation"
                                 type="number"
                                 min="1"
                                 step="1"
-                                v-model="newActivity.recommended_participation"
                             />
                         </b-input-group>
-                        <span slot="invalid-feedback">{{ errorMsg("recommended_participation") }}</span>
+                        <template #invalid-feedback>
+                            {{ errorMsg("recommended_participation") }}
+                        </template>
                     </b-form-group>
                     <b-form-group
                         label="Temps moyen de l'activité"
@@ -178,10 +184,10 @@
                                 </b-input-group-text>
                             </b-input-group-prepend>
                             <b-form-input
+                                v-model="newActivity.average_time"
                                 type="number"
                                 min="15"
                                 step="5"
-                                v-model="newActivity.average_time"
                             />
                             <b-input-group-append>
                                 <b-input-group-text>
@@ -189,7 +195,9 @@
                                 </b-input-group-text>
                             </b-input-group-append>
                         </b-input-group>
-                        <span slot="invalid-feedback">{{ errorMsg("average_time") }}</span>
+                        <template #invalid-feedback>
+                            {{ errorMsg("average_time") }}
+                        </template>
                     </b-form-group>
                     <b-form-group
                         label="Responsable(s)"
@@ -197,33 +205,38 @@
                     >
                         <multiselect
                             id="responsible"
+                            v-model="newActivity.responsibles"
                             :internal-search="false"
                             :options="responsibleOptions"
-                            @search-change="getResponsible"
                             placeholder="Un ou plusieurs responsables"
                             select-label=""
                             selected-label="Sélectionné"
                             deselect-label="Cliquer dessus pour enlever"
-                            v-model="newActivity.responsibles"
                             label="display"
                             track-by="matricule"
                             :show-no-options="false"
                             multiple
+                            @search-change="getResponsible"
                         >
-                            <span slot="noResult">Aucun responsable trouvé.</span>
-                            <span slot="noOptions" />
+                            <template #noResult>
+                                Aucun responsable trouvé.
+                            </template>
+                            <template #noOptions />
                         </multiselect>
-                        <span slot="invalid-feedback">{{ errorMsg('responsibles') }}</span>
+                        <template #invalid-feedback>
+                            {{ errorMsg('responsibles') }}
+                        </template>
                     </b-form-group>
                     <b-form-group
                         label="Description"
                         :state="inputStates.description"
                     >
-                        <quill-editor
+                        <text-editor
                             v-model="newActivity.description"
-                            :options="editorOptions"
                         />
-                        <span slot="invalid-feedback">{{ errorMsg("description") }}</span>
+                        <template #invalid-feedback>
+                            {{ errorMsg("description") }}
+                        </template>
                     </b-form-group>
                 </b-col>
             </b-form-row>
@@ -235,17 +248,21 @@
 import axios from "axios";
 
 import Multiselect from "vue-multiselect";
-import "vue-multiselect/dist/vue-multiselect.min.css";
+import "vue-multiselect/dist/vue-multiselect.css";
 
-import {quillEditor} from "vue-quill-editor";
-import "quill/dist/quill.core.css";
-import "quill/dist/quill.snow.css";
+import TextEditor from "@s:core/js/common/text_editor.vue";
 
-import {getPeopleByName} from "assets/common/search.js";
+import { grandsetStore } from "./stores/index.js";
+
+import {getPeopleByName} from "@s:core/js/common/search.js";
 
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
 
 export default {
+    components: {
+        TextEditor,
+        Multiselect
+    },
     props: {
         series: {
             type: Boolean,
@@ -256,7 +273,7 @@ export default {
             default: "-1",
         },
         /* The selected activities. */
-        value: {
+        modelValue: {
             type: Array,
             default: () => [],
         },
@@ -275,19 +292,6 @@ export default {
             },
             responsibleOptions: [],
             searchId: -1,
-            editorOptions: {
-                modules: {
-                    toolbar: [
-                        ["bold", "italic", "underline", "strike"],
-                        ["blockquote"],
-                        [{ "list": "ordered"}, { "list": "bullet" }],
-                        [{ "indent": "-1"}, { "indent": "+1" }],
-                        [{ "align": [] }],
-                        ["clean"]
-                    ]
-                },
-                placeholder: ""
-            },
             errors: {},
             /** List of input error states. */
             inputStates: {
@@ -299,7 +303,17 @@ export default {
                 responsibles: null,
             },
             loading: true,
+            store: grandsetStore(),
         };
+    },
+    computed: {
+        filteredActivities() {
+            if (this.search === "") return this.availActivities;
+
+            return this.availActivities.filter(a => {
+                return a.activity_name.toLowerCase().includes(this.search.toLowerCase());
+            });
+        },
     },
     watch: {
         /**
@@ -317,14 +331,19 @@ export default {
             });
         },
     },
-    computed: {
-        filteredActivities() {
-            if (this.search === "") return this.availActivities;
-
-            return this.availActivities.filter(a => {
-                return a.activity_name.toLowerCase().includes(this.search.toLowerCase());
-            });
-        },
+    mounted () {
+        if (this.series) {
+            // Load all activities available.
+            axios.get("/grandset/api/activity/")
+                .then(resp => {
+                    const selectedActivities = resp.data.results.filter(r => this.modelValue.includes(r.id));
+                    console.log(this.modelValue);
+                    this.availActivities = resp.data.results.filter(a => !this.modelValue.includes(a.id));
+                    this.$emit("update:modelValue", selectedActivities);
+                    this.$emit("update");
+                    this.loading = false;
+                });
+        }
     },
     methods: {
         openModal: function (activity) {
@@ -337,7 +356,7 @@ export default {
             this.searchId += 1;
             let currentSearch = this.searchId;
 
-            const teachings = this.$store.state.settings.teachings.filter(
+            const teachings = this.store.settings.teachings.filter(
                 // eslint-disable-next-line no-undef
                 value => user_properties.teaching.includes(value));
             getPeopleByName(searchQuery, teachings, "responsible")
@@ -380,14 +399,14 @@ export default {
             send(url, data, token).then(resp => {
                 if (!isModif) {
                     console.log(resp.data);
-                    this.$emit("input", this.value.concat(resp.data));
-                    this.$emit("update");
+                    this.$emit("update:modelValue", this.modelValue.concat(resp.data));
+                    this.$emit("update:state");
                 } else {
-                    const updatedActivities = this.value.map(a => {
+                    const updatedActivities = this.modelValue.map(a => {
                         if (a.id == resp.data.id) a = resp.data;
                         return a;
                     });
-                    this.$emit("input", updatedActivities);
+                    this.$emit("update:modelValue", updatedActivities);
                 }
                 this.$nextTick(() => {
                     this.$bvModal.hide("creation-activity-modal");
@@ -399,35 +418,18 @@ export default {
         },
         addActivity: function (index) {
             const activity = this.availActivities.splice(index, 1);
-            this.$emit("input", this.value.concat(activity));
-            this.$emit("update");
+            this.$emit("update:modelValue", this.modelValue.concat(activity));
+            this.$emit("update:state");
         },
         removeActivity: function (index) {
-            this.availActivities.unshift(this.value[index]);
-            this.$emit("input", this.value.filter((v, i) => i != index));
-            this.$emit("update");
+            this.availActivities.unshift(this.modelValue[index]);
+            this.$emit("update:modelValue", this.modelValue.filter((v, i) => i != index));
+            this.$emit("update:state");
         },
         resetNewActivity: function () {
             Object.assign(this.$data.newActivity, this.$options.data().newActivity);
             if ("id" in this.newActivity) delete this.newActivity.id;
         }
-    },
-    mounted () {
-        if (this.series) {
-            // Load all activities available.
-            axios.get("/grandset/api/activity/")
-                .then(resp => {
-                    const selectedActivities = resp.data.results.filter(r => this.value.includes(r.id));
-                    this.availActivities = resp.data.results.filter(a => !this.value.includes(a.id));
-                    this.$emit("input", selectedActivities);
-                    this.$emit("update");
-                    this.loading = false;
-                });
-        }
-    },
-    components: {
-        quillEditor,
-        Multiselect
     },
 };
 </script>

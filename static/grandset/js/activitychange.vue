@@ -29,9 +29,9 @@
             </b-row>
             <b-row>
                 <b-col
+                    v-if="group || student"
                     sm="12"
                     md="5"
-                    v-if="group || student"
                 >
                     <div v-if="group">
                         <h3>{{ group.group_name }}</h3>
@@ -56,8 +56,8 @@
                             :key="activity.id"
                             button
                             class="d-flex justify-content-between align-items-center"
-                            @click="changeActivity(activity, $event)"
                             :disabled="activityLog ? activity.id == activityLog.activity : triggered"
+                            @click="changeActivity(activity, $event)"
                         >
                             {{ activity.activity_name }}
                             <span>
@@ -103,6 +103,8 @@ import axios from "axios";
 import Moment from "moment";
 Moment.locale("fr");
 
+import { grandsetStore } from "./stores/index.js";
+
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
 
 export default {
@@ -132,62 +134,8 @@ export default {
             activities: [],
             logs: [],
             triggered: false,
+            store: grandsetStore(),
         };
-    },
-    methods: {
-        studentMissing: function (studentId) {
-            if (this.activityLog && this.activityLog.missing_student.find(s => s === studentId)) return "text-strike";
-            return "";
-        },
-        getMinutes: function (minutes) {
-            return parseInt(minutes.slice(0, 2)) * 60 + parseInt(minutes.slice(3, 5));
-        },
-        lastUpdate: function (lastUpdate) {
-            return String(Moment(lastUpdate).calendar()).toLowerCase();
-        },
-        changeActivity: function (activity, event) {
-            // Avoid double clicks
-            if(!event.detail || event.detail === 1){
-                setTimeout(() => {
-                    if (this.triggered) return;
-
-                    this.triggered = true;
-                    if (this.activityLog) {
-                        axios.patch(
-                            `/grandset/api/activity_log/${this.activityLogId}/`,
-                            {status: "DON"},
-                            token
-                        )
-                            .then(() => {
-                                this.createNewLog(activity);
-                            });
-                    } else {
-                        this.createNewLog(activity);
-                    }
-                }, 100);
-            }
-        },
-        createNewLog: function (activity) {
-            const newLog = {
-                grand_set: this.grandSetId,
-                [this.group ? "group" : "student"]: this.group ? this.groupId : this.studentId,
-                activity: activity.id,
-            };
-            if (this.$store.state.settings.direct_from_hq) newLog.status = "ON";
-            axios.post("/grandset/api/activity_log/", newLog, token)
-                .then(() => {
-                    this.triggered = false;
-                    this.$router.push(`/grand_set/${this.grandSetId}`, () => {
-                        this.$root.$bvToast.toast(
-                            `${this.group ? this.group.group_name : this.student.display} est maintenant dans l'activité ${activity.activity_name}`,
-                            {
-                                variant: "success",
-                                noCloseButton: true,
-                            }
-                        );
-                    });
-                });
-        },
     },
     mounted: function () {
         // Get full activityLog object.
@@ -248,11 +196,12 @@ export default {
                             });
 
                         // Get activity history for the current group.
-                        const filters = this.groupId > 0 ? `group=${this.groupId}` : `student=${this.studentId}`;
+                        const filters = this.group ? `group=${this.groupId}` : `student=${this.studentId}`;
                         axios.get(`/grandset/api/activity_log/?${filters}&ordering=-datetime_update`)
                             .then(respLogs => {
                                 this.logs = respLogs.data.results.filter(log => {
-                                    return activities.find(a => a.id == log.activity);
+                                    return activities.find(a => a.id == log.activity)
+                                        && this.grandSetId == log.grand_set;
                                 }).map(log => {
                                     log.activity = activities.find(a => a.id == log.activity);
                                     return log;
@@ -260,6 +209,61 @@ export default {
                             });
                     });
             });
+    },
+    methods: {
+        studentMissing: function (studentId) {
+            if (this.activityLog && this.activityLog.missing_student.find(s => s === studentId)) return "text-strike";
+            return "";
+        },
+        getMinutes: function (minutes) {
+            return parseInt(minutes.slice(0, 2)) * 60 + parseInt(minutes.slice(3, 5));
+        },
+        lastUpdate: function (lastUpdate) {
+            return String(Moment(lastUpdate).calendar()).toLowerCase();
+        },
+        changeActivity: function (activity, event) {
+            // Avoid double clicks
+            if(!event.detail || event.detail === 1){
+                setTimeout(() => {
+                    if (this.triggered) return;
+
+                    this.triggered = true;
+                    if (this.activityLog) {
+                        axios.patch(
+                            `/grandset/api/activity_log/${this.activityLogId}/`,
+                            {status: "DON"},
+                            token
+                        )
+                            .then(() => {
+                                this.createNewLog(activity);
+                            });
+                    } else {
+                        this.createNewLog(activity);
+                    }
+                }, 100);
+            }
+        },
+        createNewLog: function (activity) {
+            const newLog = {
+                grand_set: this.grandSetId,
+                [this.group ? "group" : "student"]: this.group ? this.groupId : this.studentId,
+                activity: activity.id,
+            };
+            if (this.store.settings.direct_from_hq) newLog.status = "ON";
+            axios.post("/grandset/api/activity_log/", newLog, token)
+                .then(() => {
+                    this.triggered = false;
+                    this.$router.push(`/grand_set/${this.grandSetId}`, () => {
+                        this.$root.$bvToast.toast(
+                            `${this.group ? this.group.group_name : this.student.display} est maintenant dans l'activité ${activity.activity_name}`,
+                            {
+                                variant: "success",
+                                noCloseButton: true,
+                            }
+                        );
+                    });
+                });
+        },
     },
 };
 </script>

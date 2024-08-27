@@ -33,21 +33,23 @@
                     <b-col>
                         <b-form-group>
                             <multiselect
+                                v-model="student"
                                 :internal-search="false"
                                 :options="studentOptions"
-                                @search-change="getStudent"
                                 placeholder="Rechercher un élève à recommander"
                                 select-label=""
                                 selected-label="Sélectionné"
                                 deselect-label="Cliquer dessus pour enlever"
-                                v-model="student"
                                 multiple
                                 label="display"
                                 track-by="matricule"
                                 :show-no-options="false"
+                                @search-change="getStudent"
                             >
-                                <span slot="noResult">Aucun élève trouvé.</span>
-                                <span slot="noOptions" />
+                                <template #noResult>
+                                    Aucun élève trouvé.
+                                </template>
+                                <template #noOptions />
                             </multiselect>
                         </b-form-group>
                     </b-col>
@@ -60,7 +62,7 @@
                             class="mb-1"
                         >
                             <b-btn
-                                :pressed.sync="recActivities[actIndex]"
+                                v-model:pressed="recActivities[actIndex]"
                                 variant="outline-warning"
                             >
                                 <b-icon
@@ -74,8 +76,8 @@
                                 class="mt-2"
                             >
                                 <b-form-group
-                                    label="Compétences"
                                     v-if="act.competence.length > 0"
+                                    label="Compétences"
                                     label-cols-sm="4"
                                     label-class="font-weight-bold"
                                 >
@@ -115,11 +117,16 @@
 import axios from "axios";
 
 import Multiselect from "vue-multiselect";
-import "vue-multiselect/dist/vue-multiselect.min.css";
+import "vue-multiselect/dist/vue-multiselect.css";
 
-import {getPeopleByName} from "assets/common/search.js";
+import { grandsetStore } from "./stores/index.js";
+
+import {getPeopleByName} from "@s:core/js/common/search.js";
 
 export default {
+    components: {
+        Multiselect
+    },
     props: {
         grandSetSeriesId: {
             default: "-1",
@@ -135,14 +142,25 @@ export default {
             recActivities: [],
             test: false,
             searchId: -1,
+            store: grandsetStore(),
         };
+    },
+    mounted: function () {
+        if (this.grandSetSeriesId === "-1") return;
+
+        axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}`)
+            .then(resp => {
+                this.grandSet = resp.data;
+                this.recActivities = resp.data.activities.map(() => false);
+                this.loading = false;
+            });
     },
     methods: {
         getStudent: function (searchQuery) {
             this.searchId += 1;
             let currentSearch = this.searchId;
 
-            const teachings = this.$store.state.settings.teachings.filter(
+            const teachings = this.store.settings.teachings.filter(
                 // eslint-disable-next-line no-undef
                 value => user_properties.teaching.includes(value));
             getPeopleByName(searchQuery, teachings, "student")
@@ -158,19 +176,6 @@ export default {
                 // this.searching = false;
                 });
         },
-    },
-    mounted: function () {
-        if (this.grandSetSeriesId === "-1") return;
-
-        axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}`)
-            .then(resp => {
-                this.grandSet = resp.data;
-                this.recActivities = resp.data.activities.map(() => false);
-                this.loading = false;
-            });
-    },
-    components: {
-        Multiselect
     }
 };
 </script>

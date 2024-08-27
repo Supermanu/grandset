@@ -24,8 +24,8 @@
                 <h5>Groupes disponibles</h5>
                 <b-input-group>
                     <b-form-input
-                        placeholder="Rechercher un groupe"
                         v-model="search"
+                        placeholder="Rechercher un groupe"
                     />
 
                     <template #append>
@@ -46,7 +46,10 @@
                         </b-input-group-text>
                     </template>
                 </b-input-group>
-                <b-list-group class="pt-1" v-if="!loading">
+                <b-list-group
+                    v-if="!loading"
+                    class="pt-1"
+                >
                     <b-list-group-item
                         v-for="(group, index) in filteredGroups"
                         :key="group.id"
@@ -61,7 +64,7 @@
                                 <b-icon icon="trash" />
                             </b-btn>
                         </span>
-                        <span>
+                        <span v-if="isNaN(group)">
                             {{ group.group_name }}:
                             <small>
                                 {{ group.students_display.join(", ") }}
@@ -83,16 +86,19 @@
                 <h5>Groupes sélectionnés</h5>
                 <div class="text-right">
                     <b-btn
-                        variant="outline-success"
                         v-b-modal.creation-group-modal
+                        variant="outline-success"
                     >
                         <b-icon icon="plus" />
                         Créer un groupe
                     </b-btn>
                 </div>
-                <b-list-group class="pt-1" v-if="!loading">
+                <b-list-group
+                    v-if="!loading"
+                    class="pt-1"
+                >
                     <b-list-group-item
-                        v-for="(group, index) in value"
+                        v-for="(group, index) in modelValue"
                         :key="group.id"
                         class="d-flex justify-content-between"
                     >
@@ -105,7 +111,10 @@
                                 <b-icon icon="arrow-left" />
                             </b-btn>
                         </span>
-                        <span class="p-1"> 
+                        <span
+                            v-if="isNaN(group)"
+                            class="p-1"
+                        > 
                             {{ group.group_name }}:
                             <small>
                                 {{ group.students_display.join(", ") }}
@@ -137,10 +146,12 @@
                         :state="inputStates.group_name"
                     >
                         <b-input
-                            type="text"
                             v-model="newGroup.group_name"
+                            type="text"
                         />
-                        <span slot="invalid-feedback">{{ errorMsg("group_name") }}</span>
+                        <template #invalid-feedback>
+                            {{ errorMsg("group_name") }}
+                        </template>
                     </b-form-group>
                     <b-form-group
                         label="Étudiants"
@@ -148,23 +159,27 @@
                     >
                         <multiselect
                             id="student"
+                            v-model="newGroup.students"
                             :internal-search="false"
                             :options="studentOptions"
-                            @search-change="getStudent"
                             placeholder="Un ou plusieurs étudiants"
                             select-label=""
                             selected-label="Sélectionné"
                             deselect-label="Cliquer dessus pour enlever"
-                            v-model="newGroup.students"
                             label="display"
                             track-by="matricule"
                             :show-no-options="false"
                             multiple
+                            @search-change="getStudent"
                         >
-                            <span slot="noResult">Aucun étudiant trouvé.</span>
-                            <span slot="noOptions" />
+                            <template #noResult>
+                                Aucun étudiant trouvé.
+                            </template>
+                            <template #noOptions />
                         </multiselect>
-                        <span slot="invalid-feedback">{{ errorMsg('students') }}</span>
+                        <template #invalid-feedback>
+                            {{ errorMsg('students') }}
+                        </template>
                     </b-form-group>
                 </b-col>
             </b-form-row>
@@ -176,16 +191,20 @@
 import axios from "axios";
 
 import Multiselect from "vue-multiselect";
-import "vue-multiselect/dist/vue-multiselect.min.css";
+import "vue-multiselect/dist/vue-multiselect.css";
 
-import {getPeopleByName} from "assets/common/search.js";
+import {getPeopleByName} from "@s:core/js/common/search.js";
+import { grandsetStore } from "./stores/index.js";
 
 const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
 
 export default {
+    components: {
+        Multiselect
+    },
     props: {
         /** The selected groups */
-        value: {
+        modelValue: {
             type: Array,
             default: () => []
         },
@@ -210,8 +229,21 @@ export default {
                 group_name: null,
                 students: null,
             },
+            store: grandsetStore(),
             loading: true,
         };
+    },
+    computed: {
+        filteredGroups: function () {
+            if (this.search === "") return this.availGroup;
+
+            return this.availGroup.filter(a => {
+                console.log(a);
+                const isInGroupName = a.group_name.toLowerCase().includes(this.search.toLowerCase());
+                const isInStudentsName = a.students_display.join("").toLowerCase().includes(this.search.toLowerCase());
+                return isInGroupName || isInStudentsName;
+            });
+        },
     },
     watch: {
         /**
@@ -229,16 +261,18 @@ export default {
             });
         },
     },
-    computed: {
-        filteredGroups: function () {
-            if (this.search === "") return this.availGroup;
-
-            return this.availGroup.filter(a => {
-                const isInGroupName = a.group_name.toLowerCase().includes(this.search.toLowerCase());
-                const isInStudentsName = a.students_display.join("").toLowerCase().includes(this.search.toLowerCase());
-                return isInGroupName || isInStudentsName;
-            });
-        },
+    mounted () {
+        if (this.series) {
+            // Load all groups available.
+            axios.get("/grandset/api/group/")
+                .then(resp => {
+                    const selectedGroups = resp.data.results.filter(r => this.modelValue.includes(r.id));
+                    this.availGroup = resp.data.results.filter(r => !this.modelValue.includes(r.id));
+                    this.$emit("update:modelValue", selectedGroups);
+                    this.$emit("update:state");
+                    this.loading = false;
+                });
+        }
     },
     methods: {
         openModal: function (group) {
@@ -250,7 +284,7 @@ export default {
             this.searchId += 1;
             let currentSearch = this.searchId;
 
-            const teachings = this.$store.state.settings.teachings.filter(
+            const teachings = this.store.settings.teachings.filter(
                 // eslint-disable-next-line no-undef
                 value => user_properties.teaching.includes(value));
             getPeopleByName(searchQuery, teachings, "student")
@@ -259,7 +293,7 @@ export default {
                     if (this.searchId !== currentSearch)
                         return;
                     this.studentOptions = resp.data.map(option => {
-                        if (this.value.find(group => group.students_id.includes(option.matricule))) {
+                        if (this.modelValue.find(group => group.students_id.includes(option.matricule))) {
                             option.$isDisabled = true;
                         }
                         return option;
@@ -285,13 +319,13 @@ export default {
         },
         addGroup(groupToAdd) {
             const group = this.availGroup.splice(groupToAdd, 1);
-            this.$emit("input", this.value.concat(group));
-            this.$emit("update");
+            this.$emit("update:modelValue", this.modelValue.concat(group));
+            this.$emit("update:state");
         },
         removeGroup(groupToRemove) {
-            this.availGroup.unshift(this.value[groupToRemove]);
-            this.$emit("input", this.value.filter((v, i) => i != groupToRemove));
-            this.$emit("update");
+            this.availGroup.unshift(this.modelValue[groupToRemove]);
+            this.$emit("update:modelValue", this.modelValue.filter((v, i) => i != groupToRemove));
+            this.$emit("update:state");
         },
         deleteGroup(groupToDelete) {
             const group = this.availGroup.splice(groupToDelete, 1);
@@ -310,14 +344,14 @@ export default {
 
             send(url, data, token).then(resp => {
                 if (!isModif) {
-                    this.$emit("input", this.value.concat(resp.data));
-                    this.$emit("update");
+                    this.$emit("update:modelValue", this.modelValue.concat(resp.data));
+                    this.$emit("update:state");
                 } else {
-                    const updatedGroups = this.value.map(a => {
+                    const updatedGroups = this.modelValue.map(a => {
                         if (a.id == resp.data.id) a = resp.data;
                         return a;
                     });
-                    this.$emit("input", updatedGroups);
+                    this.$emit("update:modelValue", updatedGroups);
                 }
                 this.$nextTick(() => {
                     this.$bvModal.hide("creation-group-modal");
@@ -331,22 +365,6 @@ export default {
             Object.assign(this.$data.newGroup, this.$options.data().newGroup);
             if ("id" in this.newGroup) delete this.newGroup.id;
         }
-    },
-    mounted () {
-        if (this.series) {
-            // Load all groups available.
-            axios.get("/grandset/api/group/")
-                .then(resp => {
-                    const selectedGroups = resp.data.results.filter(r => this.value.includes(r.id));
-                    this.availGroup = resp.data.results.filter(r => !this.value.includes(r.id));
-                    this.$emit("input", selectedGroups);
-                    this.$emit("update");
-                    this.loading = false;
-                });
-        }
-    },
-    components: {
-        Multiselect
     }
 };
 </script>

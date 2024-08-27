@@ -77,10 +77,10 @@
                             <b-icon icon="arrow-left-right" />
                         </b-btn>
                         <b-btn
+                            v-b-toggle="'students-' + group.activityLog"
                             class="float-right ml-2"
                             size="sm"
                             variant="outline-secondary"
-                            v-b-toggle="'students-' + group.activityLog"
                         >
                             <b-icon icon="three-dots-vertical" />
                         </b-btn>
@@ -145,44 +145,6 @@ export default {
             hide: false,
         };
     },
-    methods: {
-        studentMissing: function (studentId, group) {
-            if ("missing_student" in group && group.missing_student.find(s => s === studentId)) return "text-strike";
-            return "";
-        },
-        activityChange: function (group, student="-1") {
-            console.log(group);
-            console.log(student);
-            const grandSetId = this.$route.params.grandSetId;
-            const studentId = group.matricule ? group.matricule : student;
-            const groupId = group.id && studentId === "-1" ? group.id : "-1";
-            const activityLogId = this.activity ? group.activityLog : "-1";
-            this.$router.push(`/activitychange/${grandSetId}/${groupId}/${studentId}/${activityLogId}`);
-        },
-        lastUpdate: function (group) {
-            return Moment(group.datetime_update).format("HH:mm");
-        },
-        groupStatus: function (group) {
-            switch (group.status) {
-            case "ON":
-                return "";
-            case "IN":
-                return "En route vers l'activité";
-            case "OUT":
-                return "Sorti de l'activité";
-            default:
-                return "";
-            }
-        },
-        hasGroupOrStudent: function (query) {
-            const filteredGroups = this.groups.filter(g => {
-                const isInGroupName = g.group_name.toLowerCase().includes(query.toLowerCase());
-                const isInStudentsName = g.students_display.join("").toLowerCase().includes(query.toLowerCase());
-                return isInGroupName || isInStudentsName;
-            });
-            return filteredGroups.length > 0;
-        }
-    },
     mounted: function () {
         if (this.activity) {
             axios.get(`/grandset/api/activity_log/?activity=${this.activity.id}&grand_set=${this.$route.params.grandSetId}&ordering=-datetime_update`)
@@ -231,6 +193,44 @@ export default {
                     console.log(err);
                     this.loading = false;
                 });
+        }
+    },
+    methods: {
+        studentMissing: function (studentId, group) {
+            if ("missing_student" in group && group.missing_student.find(s => s === studentId)) return "text-strike";
+            return "";
+        },
+        activityChange: function (group, student="-1") {
+            console.log(group);
+            console.log(student);
+            const grandSetId = this.$route.params.grandSetId;
+            const studentId = group.matricule ? group.matricule : student;
+            const groupId = group.id && studentId === "-1" ? group.id : "-1";
+            const activityLogId = this.activity ? group.activityLog : "-1";
+            this.$router.push(`/activitychange/${grandSetId}/${groupId}/${studentId}/${activityLogId}`);
+        },
+        lastUpdate: function (group) {
+            return Moment(group.datetime_update).format("HH:mm");
+        },
+        groupStatus: function (group) {
+            switch (group.status) {
+            case "ON":
+                return "";
+            case "IN":
+                return "En route vers l'activité";
+            case "OUT":
+                return "Sorti de l'activité";
+            default:
+                return "";
+            }
+        },
+        hasGroupOrStudent: function (query) {
+            const filteredGroups = this.groups.filter(g => {
+                const isInGroupName = g.group_name.toLowerCase().includes(query.toLowerCase());
+                const isInStudentsName = g.students_display.join("").toLowerCase().includes(query.toLowerCase());
+                return isInGroupName || isInStudentsName;
+            });
+            return filteredGroups.length > 0;
         }
     }
 };

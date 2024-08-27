@@ -18,75 +18,73 @@
 <!-- along with Happyschool.  If not, see <http://www.gnu.org/licenses/>. -->
 
 <template>
-    <div>
-        <b-container>
-            <b-row
-                v-if="grandSet"
-                class="justify-content-md-center m-2"
-            >
-                <b-col md="4">
-                    <h3>{{ date }} : {{ grandSet.grand_set_series.name }}</h3>
-                </b-col>
-                <b-col md="5">
-                    <b-input-group class="mb-2">
-                        <b-form-input
-                            placeholder="Une activité, un groupe ou un élève"
-                            v-model="search"
-                        />
+    <b-container>
+        <b-row
+            v-if="grandSet"
+            class="justify-content-md-center m-2"
+        >
+            <b-col md="4">
+                <h3>{{ date }} : {{ grandSet.grand_set_series.name }}</h3>
+            </b-col>
+            <b-col md="5">
+                <b-input-group class="mb-2">
+                    <b-form-input
+                        v-model="search"
+                        placeholder="Une activité, un groupe ou un élève"
+                    />
 
-                        <template #append>
-                            <b-input-group-text>
-                                <b-icon icon="search" />
-                            </b-input-group-text>
-                        </template>
-                    </b-input-group>
-                </b-col>
-                <b-col
-                    md="2"
-                    align-h="end"
+                    <template #append>
+                        <b-input-group-text>
+                            <b-icon icon="search" />
+                        </b-input-group-text>
+                    </template>
+                </b-input-group>
+            </b-col>
+            <b-col
+                md="2"
+                align-h="end"
+            >
+                <b-dropdown
+                    variant="outline-secondary"
+                    block
+                    no-caret
                 >
-                    <b-dropdown
-                        variant="outline-secondary"
-                        block
-                        no-caret
+                    <template #button-content>
+                        <b-icon icon="list" />
+                        Options
+                    </template>
+                    <b-dropdown-item
+                        :to="`/grand_set_creation/${grandSet.grand_set_series.id}/${grandSetId}/`"
                     >
-                        <template #button-content>
-                            <b-icon icon="list" />
-                            Options
-                        </template>
-                        <b-dropdown-item
-                            :to="`/grand_set_creation/${grandSet.grand_set_series.id}/${grandSetId}/`"
-                        >
-                            Gestion des activités
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                            :to="`/grand_set_series_creation/${grandSet.grand_set_series.id}/`"
-                        >
-                            Gestion de la série
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                            :to="`/grand_set_series/`"
-                        >
-                            Liste des séries
-                        </b-dropdown-item>
-                    </b-dropdown>
-                </b-col>
-            </b-row>
-            <b-row v-if="grandSet">
-                <b-col>
-                    <b-card-group columns>
-                        <activity-overview />
-                        <activity-overview
-                            v-for="activity in filteredActivities"
-                            :key="activity.id"
-                            :activity="activity"
-                            ref="activities"
-                        />
-                    </b-card-group>
-                </b-col>
-            </b-row>
-        </b-container>
-    </div>
+                        Gestion des activités
+                    </b-dropdown-item>
+                    <b-dropdown-item
+                        :to="`/grand_set_series_creation/${grandSet.grand_set_series.id}/`"
+                    >
+                        Gestion de la série
+                    </b-dropdown-item>
+                    <b-dropdown-item
+                        :to="`/grand_set_series/`"
+                    >
+                        Liste des séries
+                    </b-dropdown-item>
+                </b-dropdown>
+            </b-col>
+        </b-row>
+        <b-row v-if="grandSet">
+            <b-col>
+                <b-card-group columns>
+                    <activity-overview />
+                    <activity-overview
+                        v-for="activity in filteredActivities"
+                        :key="activity.id"
+                        ref="activities"
+                        :activity="activity"
+                    />
+                </b-card-group>
+            </b-col>
+        </b-row>
+    </b-container>
 </template>
 
 <script>
@@ -104,6 +102,9 @@ Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
 export default {
+    components: {
+        ActivityOverview
+    },
     props: {
         grandSetId: {
             type: String,
@@ -143,9 +144,6 @@ export default {
             this.grandSet = resps[0].data;
 
         });
-    },
-    components: {
-        ActivityOverview
     }
 };
 </script>
