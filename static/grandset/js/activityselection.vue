@@ -330,22 +330,26 @@ export default {
                 }
             });
         },
+        series: function () {
+            this.initActivities();
+        }
     },
     mounted () {
-        if (this.series) {
+        this.initActivities();
+    },
+    methods: {
+        initActivities: function () {
             // Load all activities available.
             axios.get("/grandset/api/activity/")
                 .then(resp => {
                     const selectedActivities = resp.data.results.filter(r => this.modelValue.includes(r.id));
-                    console.log(this.modelValue);
                     this.availActivities = resp.data.results.filter(a => !this.modelValue.includes(a.id));
+
                     this.$emit("update:modelValue", selectedActivities);
                     this.$emit("update");
                     this.loading = false;
                 });
-        }
-    },
-    methods: {
+        },
         openModal: function (activity) {
             const modalActivity = Object.assign({}, activity);
             modalActivity.average_time = modalActivity.average_time.slice(3,5);

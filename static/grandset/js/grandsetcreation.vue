@@ -193,6 +193,7 @@
                     <activity-selection
                         v-if="ready"
                         :model-value="activities"
+                        :series="series"
                         @update:model-value="newValue => activities = newValue"
                         @update:state="hasChanged = true"
                     />
@@ -379,20 +380,25 @@ export default {
                     this.ready = true;
                 }
             } else {
+                console.log(this.objectId);
                 if (this.objectId !== "-1") {
+                    console.log("grandset one shot");
                     axios.get(`/grandset/api/grandset/${this.objectId}/`)
                         .then(resp => {
                             this.date = resp.data.date;
                             this.activities = resp.data.activities;
+                            console.log("oh", this.activities);
                             this.grandSetSeries = resp.data.grand_set_series;
 
                             this.ready = true;
                         });
                 } else {
+                    console.log("series…");
                     axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}/`)
                         .then(resp => {
                             this.grandSetSeries = resp.data;
                             this.activities = this.grandSetSeries.activities;
+                            console.log(this.activities);
                             this.ready = true;
                         });
                 }
