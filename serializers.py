@@ -40,19 +40,19 @@ class ActivitySerializer(serializers.ModelSerializer):
     responsibles = ResponsibleSerializer(read_only=True, many=True)
     responsibles_id = serializers.PrimaryKeyRelatedField(
         queryset=ResponsibleModel.objects.all(),
-        source='responsibles',
+        source="responsibles",
         required=False,
         allow_null=True,
-        many=True
+        many=True,
     )
 
     competence = CompetenceSerializer(read_only=True, many=True)
     competence_id = serializers.PrimaryKeyRelatedField(
         queryset=models.CompetenceModel.objects.all(),
-        source='competence',
+        source="competence",
         required=False,
         allow_null=True,
-        many=True
+        many=True,
     )
 
     class Meta:
@@ -64,10 +64,10 @@ class GroupSerializer(serializers.ModelSerializer):
     students = StudentSerializer(read_only=True, many=True)
     students_id = serializers.PrimaryKeyRelatedField(
         queryset=StudentModel.objects.all(),
-        source='students',
+        source="students",
         required=False,
         allow_null=True,
-        many=True
+        many=True,
     )
     students_display = serializers.SerializerMethodField()
 
@@ -110,7 +110,7 @@ class GrandSetSerializer(serializers.ModelSerializer):
     grand_set_series = GrandSetSeriesSerializer(read_only=True)
     grand_set_series_id = serializers.PrimaryKeyRelatedField(
         queryset=models.GrandSetSeriesModel.objects.all(),
-        source='grand_set_series',
+        source="grand_set_series",
         required=False,
         allow_null=True,
     )

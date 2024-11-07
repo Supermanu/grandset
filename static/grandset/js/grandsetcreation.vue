@@ -365,7 +365,7 @@ export default {
                 if (Number(this.objectId) > 0) {
                     Promise.all([
                         axios.get(`/grandset/api/grandset_series/${this.objectId}`),
-                        axios.get(`/grandset/api/grandset/?grand_set_series=${this.objectId}`)
+                        axios.get(`/grandset/api/grandset/?grand_set_series=${this.objectId}&ordering=-date`)
                     ])
                         .then(resps => {
                             this.name = resps[0].data.name;

@@ -23,21 +23,24 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from . import views
-app_name = 'grandset'
+
+app_name = "grandset"
 
 urlpatterns = [
     path("", views.GrandSetView.as_view(), name="grandset"),
     path("api/activity_stat/<int:grand_set>/group/<int:group>/", views.ActivityStatAPI.as_view()),
-    path("api/activity_stat/<int:grand_set>/student/<int:student>/", views.ActivityStatAPI.as_view()),
+    path(
+        "api/activity_stat/<int:grand_set>/student/<int:student>/", views.ActivityStatAPI.as_view()
+    ),
     path("api/group_without_activity/<int:grand_set>/", views.GroupWithoutActivityAPI.as_view()),
 ]
 
 router = DefaultRouter()
-router.register(r'api/group', viewset=views.GroupViewSet)
-router.register(r'api/activity', viewset=views.ActivityViewSet)
-router.register(r'api/activity_log', viewset=views.ActivityLogViewSet)
-router.register(r'api/activity_evaluation', viewset=views.ActivityEvaluationViewSet)
-router.register(r'api/grandset', viewset=views.GrandSetViewSet)
-router.register(r'api/grandset_series', viewset=views.GrandSetSeriesViewSet)
+router.register(r"api/group", viewset=views.GroupViewSet)
+router.register(r"api/activity", viewset=views.ActivityViewSet)
+router.register(r"api/activity_log", viewset=views.ActivityLogViewSet)
+router.register(r"api/activity_evaluation", viewset=views.ActivityEvaluationViewSet)
+router.register(r"api/grandset", viewset=views.GrandSetViewSet)
+router.register(r"api/grandset_series", viewset=views.GrandSetSeriesViewSet)
 
 urlpatterns += router.urls

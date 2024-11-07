@@ -87,7 +87,7 @@
                         :key="log.id"
                         class="border-bottom"
                     >
-                        ⇒ <small>{{ lastUpdate(log.datetime_update) }}</small>
+                        ⇒ <small>{{ lastUpdate(log.datetime_update) }}</small>: 
                         <strong>{{ log.activity.activity_name }}</strong>
                         <span v-if="student">({{ log.group ? "en groupe" : "seul(e)" }})</span>
                     </p>
@@ -101,6 +101,7 @@
 import axios from "axios";
 
 import Moment from "moment";
+import "moment/dist/locale/fr";
 Moment.locale("fr");
 
 import { grandsetStore } from "./stores/index.js";
@@ -199,10 +200,7 @@ export default {
                         const filters = this.group ? `group=${this.groupId}` : `student=${this.studentId}`;
                         axios.get(`/grandset/api/activity_log/?${filters}&ordering=-datetime_update`)
                             .then(respLogs => {
-                                this.logs = respLogs.data.results.filter(log => {
-                                    return activities.find(a => a.id == log.activity)
-                                        && this.grandSetId == log.grand_set;
-                                }).map(log => {
+                                this.logs = respLogs.data.results.filter(log => activities.find(a => a.id == log.activity)).map(log => {
                                     log.activity = activities.find(a => a.id == log.activity);
                                     return log;
                                 });

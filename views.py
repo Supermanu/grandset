@@ -128,6 +128,7 @@ class GrandSetViewSet(BaseViewSet):
     queryset = models.GrandSetModel.objects.all()
     serializer_class = serializers.GrandSetSerializer
     filterset_class = GrandSetFilters
+    ordering_fields = ["date"]
 
 
 class GrandSetSeriesViewSet(BaseViewSet):
