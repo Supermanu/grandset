@@ -93,9 +93,7 @@ class StudentFilter(filters.ModelChoiceFilter):
 
 
 class ActivityLogFilters(filters.FilterSet):
-    status = filters.MultipleChoiceFilter(
-        choices=models.ActivityLogModel.STATUS_CHOICES
-    )
+    status = filters.MultipleChoiceFilter(choices=models.ActivityLogModel.STATUS_CHOICES)
     student = StudentFilter(queryset=StudentModel.objects.all())
 
     class Meta:
@@ -162,9 +160,7 @@ class ActivityStatAPI(APIView):
             targeted_logs = targeted_logs.exclude(missing_student=s)
 
         # Count the number of done activities by activity for the student or the group.
-        logs_count = list(
-            targeted_logs.values("activity").annotate(count_log=Count("activity"))
-        )
+        logs_count = list(targeted_logs.values("activity").annotate(count_log=Count("activity")))
 
         # Get all logs from running activities or soon to be.
         activity_participant = models.ActivityLogModel.objects.filter(
@@ -183,11 +179,7 @@ class ActivityStatAPI(APIView):
         for g in logs_count:
             # Find related activity.
             activity_index = next(
-                (
-                    index
-                    for (index, d) in enumerate(activities)
-                    if d["activity"] == g["activity"]
-                ),
+                (index for (index, d) in enumerate(activities) if d["activity"] == g["activity"]),
                 None,
             )
             if activity_index:
