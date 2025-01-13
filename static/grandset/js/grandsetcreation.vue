@@ -19,51 +19,51 @@
 
 <template>
     <div>
-        <b-container>
-            <b-row>
-                <b-col>
+        <BContainer>
+            <BRow>
+                <BCol>
                     <h3>
                         Préparer
                         {{ series ? "une série" : "un" }}
                         {{ store.settings.grand_set_name }}
                     </h3>
-                </b-col>
-            </b-row>
-            <b-row class="sticky-top p-2 first-line">
-                <b-col>
-                    <b-btn to="/grand_set_series/">
+                </BCol>
+            </BRow>
+            <BRow class="sticky-top p-2 first-line">
+                <BCol>
+                    <BButton to="/grand_set_series/">
                         Retour aux séries
-                    </b-btn>
-                    <b-btn
+                    </BButton>
+                    <BButton
                         v-if="!series && objectId !== '-1'"
                         variant="secondary"
                         :to="`/grand_set/${objectId}/`"
                     >
                         Vers le Grand Set
-                    </b-btn>
-                </b-col>
-                <b-col
+                    </BButton>
+                </BCol>
+                <BCol
                     cols="2"
                     align-self="end"
                 >
-                    <b-btn
+                    <BButton
                         variant="primary"
                         :disabled="!hasChanged"
                         @click="submit"
                     >
                         Sauver
-                    </b-btn>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col>
-                    <b-form-row v-if="series">
-                        <b-col>
-                            <b-form-group
+                    </BButton>
+                </BCol>
+            </BRow>
+            <BRow>
+                <BCol>
+                    <BFormRow v-if="series">
+                        <BCol>
+                            <BFormGroup
                                 label="Nom de la série"
                                 :state="inputStates.name"
                             >
-                                <b-form-input
+                                <BFormInput
                                     v-model="name"
                                     type="text"
                                     @update="hasChanged = true"
@@ -71,16 +71,16 @@
                                 <template #invalid-feedback>
                                     {{ errorMsg("name") }}
                                 </template>
-                            </b-form-group>
-                        </b-col>
-                    </b-form-row>
-                    <b-form-row v-if="series">
-                        <b-col>
-                            <b-form-group
+                            </BFormGroup>
+                        </BCol>
+                    </BFormRow>
+                    <BFormRow v-if="series">
+                        <BCol>
+                            <BFormGroup
                                 label="Date début"
                                 :state="inputStates.date_start"
                             >
-                                <b-form-input
+                                <BFormInput
                                     v-model="date_start"
                                     type="date"
                                     @update="hasChanged = true"
@@ -88,14 +88,14 @@
                                 <template #invalid-feedback>
                                     {{ errorMsg("date_start") }}
                                 </template>
-                            </b-form-group>
-                        </b-col>
-                        <b-col>
-                            <b-form-group
+                            </BFormGroup>
+                        </BCol>
+                        <BCol>
+                            <BFormGroup
                                 label="Date fin"
                                 :state="inputStates.date_end"
                             >
-                                <b-form-input
+                                <BFormInput
                                     v-model="date_end"
                                     type="date"
                                     @update="hasChanged = true"
@@ -103,16 +103,16 @@
                                 <template #invalid-feedback>
                                     {{ errorMsg("date_end") }}
                                 </template>
-                            </b-form-group>
-                        </b-col>
-                    </b-form-row>
-                    <b-form-row v-else>
-                        <b-col>
-                            <b-form-group
+                            </BFormGroup>
+                        </BCol>
+                    </BFormRow>
+                    <BFormRow v-else>
+                        <BCol>
+                            <BFormGroup
                                 label="Date début"
                                 :state="inputStates.date"
                             >
-                                <b-form-input
+                                <BFormInput
                                     v-model="date"
                                     type="date"
                                     @update="hasChanged = true"
@@ -120,76 +120,72 @@
                                 <template #invalid-feedback>
                                     {{ errorMsg("date") }}
                                 </template>
-                            </b-form-group>
-                        </b-col>
-                    </b-form-row>
-                </b-col>
-            </b-row>
+                            </BFormGroup>
+                        </BCol>
+                    </BFormRow>
+                </BCol>
+            </BRow>
             <div
                 v-if="ready && series"
                 class="mb-4"
             >
-                <b-row>
-                    <b-col>
+                <BRow>
+                    <BCol>
                         <h5>{{ store.settings.grand_set_name }} de la série</h5>
-                    </b-col>
-                </b-row>
-                <b-row
+                    </BCol>
+                </BRow>
+                <BRow
                     class="mb-2"
                 >
-                    <b-col>
-                        <b-btn
+                    <BCol>
+                        <BButton
                             :to="`/grand_set_creation/${objectId}/-1/`"
                             variant="success"
                             :disabled="objectId === '-1'"
                         >
-                            <b-icon
-                                icon="plus"
-                            />
+                            <IBiPlus />
                             <span v-if="objectId !== '-1'">
                                 Ajouter un {{ store.settings.grand_set_name }}
                             </span>
                             <span v-else>
                                 Enregistrer avant d'ajouter un {{ store.settings.grand_set_name }}
                             </span>
-                        </b-btn>
-                    </b-col>
-                </b-row>
-                <b-row>
-                    <b-col>
-                        <b-card
+                        </BButton>
+                    </BCol>
+                </BRow>
+                <BRow>
+                    <BCol>
+                        <BCard
                             v-for="gs in grandSets"
                             :key="gs.id"
                             no-body
                         >
-                            <b-card-text class="p-1">
-                                <b-row>
-                                    <b-col>
+                            <BCardText class="p-1">
+                                <BRow>
+                                    <BCol>
                                         <strong>{{ gs.date }}</strong>
-                                    </b-col>
-                                    <b-col class="text-right">
-                                        <b-btn
+                                    </BCol>
+                                    <BCol class="text-right">
+                                        <BButton
                                             :to="`/grand_set/${gs.id}/`"
                                             size="sm"
                                             variant="outline-primary"
                                         >
                                             Voir
-                                            <b-icon
-                                                icon="chevron-right"
-                                            />
-                                        </b-btn>
-                                    </b-col>
-                                </b-row>
-                            </b-card-text>
-                        </b-card>
-                    </b-col>
-                </b-row>
+                                            <IBiChevronRight />
+                                        </BButton>
+                                    </BCol>
+                                </BRow>
+                            </BCardText>
+                        </BCard>
+                    </BCol>
+                </BRow>
             </div>
-            <b-row
+            <BRow
                 v-if="ready"
                 class="mb-4"
             >
-                <b-col>
+                <BCol>
                     <activity-selection
                         v-if="ready"
                         :model-value="activities"
@@ -197,19 +193,19 @@
                         @update:model-value="newValue => activities = newValue"
                         @update:state="hasChanged = true"
                     />
-                </b-col>
-            </b-row>
-            <b-row v-if="series">
-                <b-col>
+                </BCol>
+            </BRow>
+            <BRow v-if="series">
+                <BCol>
                     <group-selection
                         v-if="ready"
                         :model-value="groups"
                         @update:model-value="newValue => groups = newValue"
                         @update:state="hasChanged = true"
                     />
-                </b-col>
-            </b-row>
-        </b-container>
+                </BCol>
+            </BRow>
+        </BContainer>
     </div>
 </template>
 
@@ -334,25 +330,28 @@ export default {
                 .then(resp => {
                     if (isNewObj && !this.series) {
                         const path = `/grand_set/${resp.data.id}/`;
-                        this.$router.push(path, () => {
-                            this.$root.$bvToast.toast("Les données ont bien été sauvegardées", {
+                        this.$router.push(path).then(() => {
+                            this.show({props:{
+                                body:"Les données ont bien été sauvegardées",
                                 variant: "success",
                                 noCloseButton: true,
-                            });
+                            }});
                         });
                     } else if (isNewObj) {
                         const path = `/grand_set_series_creation/${resp.data.id}/`;
-                        this.$router.push(path, () => {
-                            this.$root.$bvToast.toast("Les données ont bien été sauvegardées", {
+                        this.$router.push(path).then(() => {
+                            this.show({props:{
+                                body:"Les données ont bien été sauvegardées",
                                 variant: "success",
                                 noCloseButton: true,
-                            });
+                            }});
                         });
                     } else {
-                        this.$root.$bvToast.toast("Les données ont bien été sauvegardées", {
+                        this.show({props:{
+                            body:"Les données ont bien été sauvegardées",
                             variant: "success",
                             noCloseButton: true,
-                        });
+                        }});
                     }
                     this.hasChanged = false;
                 })

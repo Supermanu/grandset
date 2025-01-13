@@ -19,29 +19,29 @@
 
 <template>
     <div>
-        <b-container>
-            <b-row>
-                <b-col>
+        <BContainer>
+            <BRow>
+                <BCol>
                     <h2>Évalution des élèves</h2>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col>
-                    <b-btn @click="$router.go(-1)">
+                </BCol>
+            </BRow>
+            <BRow>
+                <BCol>
+                    <BButton @click="$router.go(-1)">
                         Retour
-                    </b-btn>
-                </b-col>
-            </b-row>
-            <b-overlay
+                    </BButton>
+                </BCol>
+            </BRow>
+            <BOverlay
                 :show="loading"
                 rounded="sm"
             >
-                <b-row
+                <BRow
                     v-if="!loading"
                     class="mt-4"
                 >
-                    <b-col>
-                        <b-form-group
+                    <BCol>
+                        <BFormGroup
                             :label="`Évaluation de ${group ? group.group_name : student.display}`"
                             label-cols-sm="4"
                             label-align-sm="center"
@@ -61,10 +61,10 @@
                                 />
                             </div>
                             <div v-else>
-                                <b-input-group
+                                <BInputGroup
                                     :append="'/ ' + store.settings.max_points"
                                 >
-                                    <b-form-input
+                                    <BFormInput
                                         v-model="generalEval"
                                         type="number"
                                         step="0.01"
@@ -72,34 +72,34 @@
                                         :max="store.settings.max_points"
                                         @input="updateIndividual"
                                     />
-                                </b-input-group>
+                                </BInputGroup>
                             </div>
-                        </b-form-group>
-                        <b-card
+                        </BFormGroup>
+                        <BCard
                             v-if="group"
                             bg-variant="light"
                         >
-                            <b-form-group
+                            <BFormGroup
                                 label-cols-lg="3"
                                 :label="group.group_name"
                                 label-size="lg"
                                 label-class="font-weight-bold pt-0"
                                 class="mb-0"
                             >
-                                <b-form-group 
+                                <BFormGroup 
                                     v-for="(stud, index) in students"
                                     :key="stud.matricule"
                                     label-cols-sm="3"
                                     label-align-sm="right"
                                 >
                                     <slot name="label">
-                                        <b-form-checkbox
+                                        <BFormCheckbox
                                             v-model="individualEval[index]"
                                             switch
                                             class="mr-n2"
                                         >
                                             {{ students[index].display }}
-                                        </b-form-checkbox>
+                                        </BFormCheckbox>
                                     </slot>
                                     <div v-if="useCompetencies">
                                         <competence-evaluation
@@ -113,10 +113,10 @@
                                         />
                                     </div>
                                     <div v-else>
-                                        <b-input-group
+                                        <BInputGroup
                                             :append="'/ ' + store.settings.max_points"
                                         >
-                                            <b-form-input
+                                            <BFormInput
                                                 v-model="evaluation[index]"
                                                 type="number"
                                                 step="0.01"
@@ -124,25 +124,25 @@
                                                 :max="store.settings.max_points"
                                                 :readonly="!individualEval[index]"
                                             />
-                                        </b-input-group>
+                                        </BInputGroup>
                                     </div>
-                                </b-form-group>
-                            </b-form-group>
-                        </b-card>
-                    </b-col>
-                </b-row>
-                <b-row>
-                    <b-col class="text-right mt-2">
-                        <b-btn
+                                </BFormGroup>
+                            </BFormGroup>
+                        </BCard>
+                    </BCol>
+                </BRow>
+                <BRow>
+                    <BCol class="text-right mt-2">
+                        <BButton
                             variant="primary"
                             @click="sendData"
                         >
                             Soumettre
-                        </b-btn>
-                    </b-col>
-                </b-row>
-            </b-overlay>
-        </b-container>
+                        </BButton>
+                    </BCol>
+                </BRow>
+            </BOverlay>
+        </BContainer>
     </div>
 </template>
 
@@ -302,15 +302,14 @@ export default {
 
             Promise.all(evalPromises)
                 .then(() => {
-                    this.$router.push(`/activitymanagement/${this.activityLog.grand_set}/${this.activityLog.activity}/`, () => {
-                        this.$root.$bvToast.toast(
-                            "Les données ont bien été enregistrées.",
-                            {
+                    this.$router.push(`/activitymanagement/${this.activityLog.grand_set}/${this.activityLog.activity}/`)
+                        .then(() => {
+                            this.show({props:{
+                                body: "Les données ont bien été enregistrées.",
                                 variant: "success",
                                 noCloseButton: true,
-                            }
-                        );
-                    });
+                            }});
+                        });
                 });
         }
     }

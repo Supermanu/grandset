@@ -18,51 +18,51 @@
 <!-- along with Happyschool.  If not, see <http://www.gnu.org/licenses/>. -->
 
 <template>
-    <b-overlay :show="loading">
-        <b-row>
-            <b-col>
+    <BOverlay :show="loading">
+        <BRow>
+            <BCol>
                 <h5>Groupes disponibles</h5>
-                <b-input-group>
-                    <b-form-input
+                <BInputGroup>
+                    <BFormInput
                         v-model="search"
                         placeholder="Rechercher un groupe"
                     />
 
                     <template #append>
-                        <b-button
+                        <BButton
                             v-if="search"
                             size="sm"
                             variant="outline-danger"
                             @click="search = ''"
                         >
                             <small>
-                                <b-icon icon="backspace" />
+                                <IBiBackspace />
                             </small>
-                        </b-button>
+                        </BButton>
                     </template>
                     <template #prepend>
-                        <b-input-group-text>
-                            <b-icon icon="search" />
-                        </b-input-group-text>
+                        <BInputGroupText>
+                            <IBiSearch />
+                        </BInputGroupText>
                     </template>
-                </b-input-group>
-                <b-list-group
+                </BInputGroup>
+                <BListGroup
                     v-if="!loading"
                     class="pt-1"
                 >
-                    <b-list-group-item
+                    <BListGroupItem
                         v-for="(group, index) in filteredGroups"
                         :key="group.id"
                         class="d-flex justify-content-between"
                     >
                         <span class="mr-1">
-                            <b-btn
+                            <BButton
                                 size="sm"
                                 variant="danger"
                                 @click="deleteGroup(index)"
                             >
-                                <b-icon icon="trash" />
-                            </b-btn>
+                                <IBiTrash />
+                            </BButton>
                         </span>
                         <span v-if="isNaN(group)">
                             {{ group.group_name }}:
@@ -71,45 +71,45 @@
                             </small>
                         </span>
                         <span>
-                            <b-btn
+                            <BButton
                                 size="sm"
                                 variant="primary"
                                 @click="addGroup(index)"
                             >
-                                <b-icon icon="arrow-right" />
-                            </b-btn>
+                                <IBiArrowRight />
+                            </BButton>
                         </span>
-                    </b-list-group-item>
-                </b-list-group>
-            </b-col>
-            <b-col>
+                    </BListGroupItem>
+                </BListGroup>
+            </BCol>
+            <BCol>
                 <h5>Groupes sélectionnés</h5>
                 <div class="text-right">
-                    <b-btn
+                    <BButton
                         v-b-modal.creation-group-modal
                         variant="outline-success"
                     >
-                        <b-icon icon="plus" />
+                        <IBiPlus />
                         Créer un groupe
-                    </b-btn>
+                    </BButton>
                 </div>
-                <b-list-group
+                <BListGroup
                     v-if="!loading"
                     class="pt-1"
                 >
-                    <b-list-group-item
+                    <BListGroupItem
                         v-for="(group, index) in modelValue"
                         :key="group.id"
                         class="d-flex justify-content-between"
                     >
                         <span>
-                            <b-btn
+                            <BButton
                                 size="sm"
                                 variant="primary"
                                 @click="removeGroup(index)"
                             >
-                                <b-icon icon="arrow-left" />
-                            </b-btn>
+                                <IBiArrowLeft />
+                            </BButton>
                         </span>
                         <span
                             v-if="isNaN(group)"
@@ -120,17 +120,17 @@
                                 {{ group.students_display.join(", ") }}
                             </small>
                         </span>
-                        <b-btn
+                        <BButton
                             size="sm"
                             variant="outline-secondary"
                             @click="openModal(group)"
                         >
-                            <b-icon icon="pencil-square" />
-                        </b-btn>
-                    </b-list-group-item>
-                </b-list-group>
-            </b-col>
-        </b-row>
+                            <IBiPencilSquare />
+                        </BButton>
+                    </BListGroupItem>
+                </BListGroup>
+            </BCol>
+        </BRow>
         <b-modal
             id="creation-group-modal"
             size="lg"
@@ -139,21 +139,21 @@
             @ok="submit"
             @hidden="resetNewGroup"
         >
-            <b-form-row>
-                <b-col>
-                    <b-form-group
+            <BFormRow>
+                <BCol>
+                    <BFormGroup
                         label="Nom du groupe"
                         :state="inputStates.group_name"
                     >
-                        <b-input
+                        <BFormInput
                             v-model="newGroup.group_name"
                             type="text"
                         />
                         <template #invalid-feedback>
                             {{ errorMsg("group_name") }}
                         </template>
-                    </b-form-group>
-                    <b-form-group
+                    </BFormGroup>
+                    <BFormGroup
                         label="Étudiants"
                         :state="inputStates.students"
                     >
@@ -180,11 +180,11 @@
                         <template #invalid-feedback>
                             {{ errorMsg('students') }}
                         </template>
-                    </b-form-group>
-                </b-col>
-            </b-form-row>
+                    </BFormGroup>
+                </BCol>
+            </BFormRow>
         </b-modal>
-    </b-overlay>
+    </BOverlay>
 </template>
 
 <script>

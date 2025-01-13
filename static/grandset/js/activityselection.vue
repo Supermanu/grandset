@@ -19,92 +19,92 @@
 
 <template>
     <div>
-        <b-overlay :show="loading">
-            <b-row>
-                <b-col>
+        <BOverlay :show="loading">
+            <BRow>
+                <BCol>
                     <h5>Activités disponibles</h5>
-                    <b-input-group>
-                        <b-form-input
+                    <BInputGroup>
+                        <BFormInput
                             v-model="search"
                             placeholder="Rechercher une activité"
                         />
 
                         <template #append>
-                            <b-button
+                            <BButton
                                 v-if="search"
                                 size="sm"
                                 variant="outline-danger"
                                 @click="search = ''"
                             >
                                 <small>
-                                    <b-icon icon="backspace" />
+                                    <IBiBackspace />
                                 </small>
-                            </b-button>
+                            </BButton>
                         </template>
                         <template #prepend>
-                            <b-input-group-text>
-                                <b-icon icon="search" />
-                            </b-input-group-text>
+                            <BInputGroupText>
+                                <IBiSearch />
+                            </BInputGroupText>
                         </template>
-                    </b-input-group>
-                    <b-list-group class="pt-1">
-                        <b-list-group-item
+                    </BInputGroup>
+                    <BListGroup class="pt-1">
+                        <BListGroupItem
                             v-for="(activity, index) in filteredActivities"
                             :key="activity.id"
                             class="d-flex justify-content-between"
                         >
                             {{ activity.activity_name }}
                             <span>
-                                <b-btn
+                                <BButton
                                     size="sm"
                                     variant="primary"
                                     @click="addActivity(index)"
                                 >
-                                    <b-icon icon="arrow-right" />
-                                </b-btn>
+                                    <IBiArrowRight />
+                                </BButton>
                             </span>
-                        </b-list-group-item>
-                    </b-list-group>
-                </b-col>
-                <b-col>
+                        </BListGroupItem>
+                    </BListGroup>
+                </BCol>
+                <BCol>
                     <h5>Activités sélectionnées</h5>
                     <div class="text-right">
-                        <b-btn
+                        <BButton
                             v-b-modal.creation-activity-modal
                             variant="outline-success"
                         >
-                            <b-icon icon="plus" />
+                            <IBiPlus />
                             Créer une activité
-                        </b-btn>
+                        </BButton>
                     </div>
-                    <b-list-group class="pt-1">
-                        <b-list-group-item
+                    <BListGroup class="pt-1">
+                        <BListGroupItem
                             v-for="(activity, index) in modelValue"
                             :key="activity.id"
                             class="d-flex justify-content-between"
                         >
                             <span>
-                                <b-btn
+                                <BButton
                                     size="sm"
                                     variant="primary"
                                     @click="removeActivity(index)"
                                 >
-                                    <b-icon icon="arrow-left" />
-                                </b-btn>
+                                    <IBiTrash />
+                                </BButton>
                             </span>
                             {{ activity.activity_name }}
-                            <b-btn
+                            <BButton
                                 size="sm"
                                 variant="outline-secondary"
                                 @click="openModal(activity)"
                             >
-                                <b-icon icon="pencil-square" />
-                            </b-btn>
-                        </b-list-group-item>
-                    </b-list-group>
-                </b-col>
-            </b-row>
-        </b-overlay>
+                                <IBiPencilSquare />
+                            </BButton>
+                        </BListGroupItem>
+                    </BListGroup>
+                </BCol>
+            </BRow>
+        </BOverlay>
         <b-modal
             id="creation-activity-modal"
             size="lg"
@@ -113,93 +113,93 @@
             @ok="submit"
             @hidden="resetNewActivity"
         >
-            <b-form-row>
-                <b-col>
-                    <b-form-group
+            <BFormRow>
+                <BCol>
+                    <BFormGroup
                         label="Nom de l'activité"
                         :state="inputStates.activity_name"
                     >
-                        <b-input
+                        <BFormInput
                             v-model="newActivity.activity_name"
                             type="text"
                         />
                         <template #invalid-feedback>
                             {{ errorMsg("activity_name") }}
                         </template>
-                    </b-form-group>
-                    <b-form-group
+                    </BFormGroup>
+                    <BFormGroup
                         label="Nombre maximum de participants"
                         description="Le nombre de groupe maximum que l'activité peut acceuillir."
                         :state="inputStates.max_participant"
                     >
-                        <b-input-group>
-                            <b-input-group-prepend>
-                                <b-input-group-text>
-                                    <b-icon icon="people" />
-                                </b-input-group-text>
-                            </b-input-group-prepend>
+                        <BInputGroup>
+                            <template #prepend>
+                                <BInputGroupText>
+                                    <IBiPeople />
+                                </BInputGroupText>
+                            </template>
 
-                            <b-form-input
+                            <BFormInput
                                 v-model="newActivity.max_participant"
                                 type="number"
                                 min="1"
                                 step="1"
                             />
-                        </b-input-group>
+                        </BInputGroup>
                         <template #invalid-feedback>
                             {{ errorMsg("max_participant") }}
                         </template>
-                    </b-form-group>
-                    <b-form-group
+                    </BFormGroup>
+                    <BFormGroup
                         label="Nombre de participation recommandé"
                         description="Le nombre de participation que chaque groupe devrait faire."
                     >
-                        <b-input-group>
-                            <b-input-group-prepend>
-                                <b-input-group-text>
-                                    <b-icon icon="reply-all" />
-                                </b-input-group-text>
-                            </b-input-group-prepend>
+                        <BInputGroup>
+                            <template #prepend>
+                                <BInputGroupText>
+                                    <IBiReplyAll />
+                                </BInputGroupText>
+                            </template>
 
-                            <b-form-input
+                            <BFormInput
                                 v-model="newActivity.recommended_participation"
                                 type="number"
                                 min="1"
                                 step="1"
                             />
-                        </b-input-group>
+                        </BInputGroup>
                         <template #invalid-feedback>
                             {{ errorMsg("recommended_participation") }}
                         </template>
-                    </b-form-group>
-                    <b-form-group
+                    </BFormGroup>
+                    <BFormGroup
                         label="Temps moyen de l'activité"
                         description="Le temps moyen qu'un groupe met pour faire l'activité."
                         :state="inputStates.average_time"
                     >
-                        <b-input-group>
-                            <b-input-group-prepend>
-                                <b-input-group-text>
-                                    <b-icon icon="clock" />
-                                </b-input-group-text>
-                            </b-input-group-prepend>
-                            <b-form-input
+                        <BInputGroup>
+                            <template #prepend>
+                                <BInputGroupText>
+                                    <IBiClock />
+                                </BInputGroupText>
+                            </template>
+                            <BFormInput
                                 v-model="newActivity.average_time"
                                 type="number"
                                 min="15"
                                 step="5"
                             />
-                            <b-input-group-append>
-                                <b-input-group-text>
+                            <template #append>
+                                <BInputGroupText>
                                     minutes
-                                </b-input-group-text>
-                            </b-input-group-append>
-                        </b-input-group>
+                                </BInputGroupText>
+                            </template>
+                        </BInputGroup>
                         <template #invalid-feedback>
                             {{ errorMsg("average_time") }}
                         </template>
-                    </b-form-group>
-                    <b-form-group
+                    </BFormGroup>
+                    <BFormGroup
                         label="Responsable(s)"
                         :state="inputStates.responsibles"
                     >
@@ -226,8 +226,8 @@
                         <template #invalid-feedback>
                             {{ errorMsg('responsibles') }}
                         </template>
-                    </b-form-group>
-                    <b-form-group
+                    </BFormGroup>
+                    <BFormGroup
                         label="Description"
                         :state="inputStates.description"
                     >
@@ -237,9 +237,9 @@
                         <template #invalid-feedback>
                             {{ errorMsg("description") }}
                         </template>
-                    </b-form-group>
-                </b-col>
-            </b-form-row>
+                    </BFormGroup>
+                </BCol>
+            </BFormRow>
         </b-modal>
     </div>
 </template>

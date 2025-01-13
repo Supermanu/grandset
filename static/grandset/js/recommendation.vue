@@ -19,19 +19,19 @@
 
 <template>
     <div>
-        <b-container>
-            <b-overlay
+        <BContainer>
+            <BOverlay
                 :show="loading"
                 rounded="sm"
             >
-                <b-row>
-                    <b-col>
+                <BRow>
+                    <BCol>
                         <h2>Recommandation</h2>
-                    </b-col>
-                </b-row>
-                <b-row>
-                    <b-col>
-                        <b-form-group>
+                    </BCol>
+                </BRow>
+                <BRow>
+                    <BCol>
+                        <BFormGroup>
                             <multiselect
                                 v-model="student"
                                 :internal-search="false"
@@ -51,65 +51,62 @@
                                 </template>
                                 <template #noOptions />
                             </multiselect>
-                        </b-form-group>
-                    </b-col>
-                </b-row>
-                <b-row>
-                    <b-col v-if="grandSet">
-                        <b-card
+                        </BFormGroup>
+                    </BCol>
+                </BRow>
+                <BRow>
+                    <BCol v-if="grandSet">
+                        <BCard
                             v-for="(act, actIndex) in grandSet.activities"
                             :key="act.id"
                             class="mb-1"
                         >
-                            <b-btn
+                            <BButton
                                 v-model:pressed="recActivities[actIndex]"
                                 variant="outline-warning"
                             >
-                                <b-icon
-                                    icon="star"
-                                    variant="outline-warning"
-                                />
-                            </b-btn>
+                                <IBiStar variant="outline-warning" />
+                            </BButton>
                             {{ act.activity_name }}
-                            <b-collapse
+                            <BCollapse
                                 v-model="recActivities[actIndex]"
                                 class="mt-2"
                             >
-                                <b-form-group
+                                <BFormGroup
                                     v-if="act.competence.length > 0"
                                     label="Compétences"
                                     label-cols-sm="4"
                                     label-class="font-weight-bold"
                                 >
                                     <div class="pt-2">
-                                        <b-form-group
+                                        <BFormGroup
                                             v-for="comp in act.competence"
                                             :key="comp.id"
                                         >
-                                            <b-form-checkbox>
+                                            <BFormCheckbox>
                                                 {{ comp.name }}
-                                            </b-form-checkbox>
-                                        </b-form-group>
+                                            </BFormCheckbox>
+                                        </BFormGroup>
                                     </div>
-                                </b-form-group>
-                                <b-form-group
+                                </BFormGroup>
+                                <BFormGroup
                                     label="Commentaire"
                                 >
-                                    <b-input type="text" />
-                                </b-form-group>
-                            </b-collapse>
-                        </b-card>
-                    </b-col>
-                </b-row>
-                <b-row class="mt-1">
-                    <b-col>
-                        <b-btn variant="primary">
+                                    <BFormInput type="text" />
+                                </BFormGroup>
+                            </BCollapse>
+                        </BCard>
+                    </BCol>
+                </BRow>
+                <BRow class="mt-1">
+                    <BCol>
+                        <BButton variant="primary">
                             Recommander
-                        </b-btn>
-                    </b-col>
-                </b-row>
-            </b-overlay>
-        </b-container>
+                        </BButton>
+                    </BCol>
+                </BRow>
+            </BOverlay>
+        </BContainer>
     </div>
 </template>
 

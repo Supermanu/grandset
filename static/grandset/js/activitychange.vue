@@ -19,16 +19,16 @@
 
 <template>
     <div>
-        <b-container>
-            <b-row>
-                <b-col>
-                    <b-btn @click="$router.go(-1)">
+        <BContainer>
+            <BRow>
+                <BCol>
+                    <BButton @click="$router.go(-1)">
                         Retour
-                    </b-btn>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col
+                    </BButton>
+                </BCol>
+            </BRow>
+            <BRow>
+                <BCol
                     v-if="group || student"
                     sm="12"
                     md="5"
@@ -48,10 +48,10 @@
                     <div v-else>
                         <h3>{{ student.last_name }} {{ student.first_name }}</h3>
                     </div>
-                </b-col>
-                <b-col>
-                    <b-list-group>
-                        <b-list-group-item
+                </BCol>
+                <BCol>
+                    <BListGroup>
+                        <BListGroupItem
                             v-for="activity in activities"
                             :key="activity.id"
                             button
@@ -62,25 +62,25 @@
                             {{ activity.activity_name }}
                             <span>
                                 <small>± {{ getMinutes(activity.average_time) }}min.</small> 
-                                <b-badge
+                                <BBadge
                                     variant="primary"
                                     pill
                                 >
                                     Fait : {{ activity.done }}/{{ activity.recommended_participation }}
-                                </b-badge>
-                                <b-badge
+                                </BBadge>
+                                <BBadge
                                     variant="primary"
                                     pill
                                 >
                                     Participants : {{ activity.participant }}/{{ activity.max_participant }}
-                                </b-badge>
+                                </BBadge>
                             </span>
-                        </b-list-group-item>
-                    </b-list-group>
-                </b-col>
-            </b-row>
-            <b-row class="mt-4">
-                <b-col>
+                        </BListGroupItem>
+                    </BListGroup>
+                </BCol>
+            </BRow>
+            <BRow class="mt-4">
+                <BCol>
                     <h4>Historique des activités</h4>
                     <p
                         v-for="log in logs"
@@ -91,9 +91,9 @@
                         <strong>{{ log.activity.activity_name }}</strong>
                         <span v-if="student">({{ log.group ? "en groupe" : "seul(e)" }})</span>
                     </p>
-                </b-col>
-            </b-row>
-        </b-container>
+                </BCol>
+            </BRow>
+        </BContainer>
     </div>
 </template>
 
@@ -251,14 +251,12 @@ export default {
             axios.post("/grandset/api/activity_log/", newLog, token)
                 .then(() => {
                     this.triggered = false;
-                    this.$router.push(`/grand_set/${this.grandSetId}`, () => {
-                        this.$root.$bvToast.toast(
-                            `${this.group ? this.group.group_name : this.student.display} est maintenant dans l'activité ${activity.activity_name}`,
-                            {
-                                variant: "success",
-                                noCloseButton: true,
-                            }
-                        );
+                    this.$router.push(`/grand_set/${this.grandSetId}`).then(() => {
+                        this.show({props:{
+                            body: `${this.group ? this.group.group_name : this.student.display} est maintenant dans l'activité ${activity.activity_name}`,
+                            variant: "success",
+                            noCloseButton: true,
+                        }});
                     });
                 });
         },

@@ -19,32 +19,32 @@
 
 <template>
     <div>
-        <b-container>
-            <b-row>
-                <b-col>
-                    <b-btn :to="`/grand_set/${grandSetId}/`">
+        <BContainer>
+            <BRow>
+                <BCol>
+                    <BButton :to="`/grand_set/${grandSetId}/`">
                         Retour au {{ store.settings.grand_set_name }}
-                    </b-btn>
-                </b-col>
-            </b-row>
-            <b-row v-if="activity">
-                <b-col>
+                    </BButton>
+                </BCol>
+            </BRow>
+            <BRow v-if="activity">
+                <BCol>
                     <h2>{{ activity.activity_name }}</h2>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col>
+                </BCol>
+            </BRow>
+            <BRow>
+                <BCol>
                     <p v-if="logs.length === 0">
                         Aucun groupe dans l'activité.
                     </p>
-                    <b-card
+                    <BCard
                         v-for="(log, index) in logs"
                         :key="log.id"
                     >
-                        <b-card-title>{{ log.group ? log.group.group_name : `${log.student.last_name} ${log.student.first_name}` }}</b-card-title>
-                        <b-row>
-                            <b-col md="7">
-                                <b-card-text v-if="log.group">
+                        <BCardTitle>{{ log.group ? log.group.group_name : `${log.student.last_name} ${log.student.first_name}` }}</BCardTitle>
+                        <BRow>
+                            <BCol md="7">
+                                <BCardText v-if="log.group">
                                     <span
                                         v-for="(stud, idx) in log.group.students_display"
                                         :key="idx"
@@ -52,52 +52,51 @@
                                     >
                                         {{ stud }}
                                     </span>
-                                </b-card-text>
-                            </b-col>
-                            <b-col
+                                </BCardText>
+                            </BCol>
+                            <BCol
                                 md="5"
                                 class="text-right"
                             >
                                 <div v-if="log.status === 'ON'">
-                                    <b-btn
+                                    <BButton
                                         variant="outline-primary"
                                     >
-                                        <b-icon icon="graph-up" />
+                                        <IBiGraphUp />
                                         Historique
-                                    </b-btn>
-                                    <b-btn
+                                    </BButton>
+                                    <BButton
                                         variant="outline-success"
                                         :to="`/evaluation/${log.id}/${log.group ? log.group.id : '-1'}/${log.student ? log.student.matricule : '-1'}/`"
                                     >
-                                        <b-icon icon="list-check" />
+                                        <IBiListCheck />
                                         Évaluer
-                                    </b-btn>
-                                    <b-btn
+                                    </BButton>
+                                    <BButton
                                         variant="secondary"
                                         @click="changeStatus(index, 'OUT')"
                                     >
-                                        <b-icon icon="box-arrow-right" />
+                                        <IBiBoxArrowInRight />
                                         Départ
-                                    </b-btn>
+                                    </BButton>
                                 </div>
                                 <div v-else>
-                                    <b-btn
+                                    <BButton
                                         variant="info"
                                         @click="changeStatus(index, 'ON')"
                                     >
-                                        <b-icon
-                                            icon="box-arrow-in-right"
+                                        <IBiBoxArrowInRight
                                             animation="fade"
                                         />
                                         Marquer présent
-                                    </b-btn>
+                                    </BButton>
                                 </div>
-                            </b-col>
-                        </b-row>
-                    </b-card>
-                </b-col>
-            </b-row>
-        </b-container>
+                            </BCol>
+                        </BRow>
+                    </BCard>
+                </BCol>
+            </BRow>
+        </BContainer>
     </div>
 </template>
 
@@ -172,13 +171,11 @@ export default {
                         this.logs.splice(logIndex, 1, newLog);
                         this.logs.sort((a, b) => a.status > b.status);
                     } else if (newStatus == "OUT") {
-                        this.$root.$bvToast.toast(
-                            `${group ? group.group_name : this.logs[logIndex].student.last_name} n'est plus dans l'activité ${this.activity.activity_name}`,
-                            {
-                                variant: "warning",
-                                noCloseButton: true,
-                            }
-                        );
+                        this.show({props:{
+                            body:`${group ? group.group_name : this.logs[logIndex].student.last_name} n'est plus dans l'activité ${this.activity.activity_name}`,
+                            variant: "warning",
+                            noCloseButton: true,
+                        }});
                         this.logs.splice(logIndex, 1);
                     }
                 });

@@ -19,72 +19,72 @@
 
 <template>
     <div>
-        <b-container>
-            <b-row>
-                <b-col>
+        <BContainer>
+            <BRow>
+                <BCol>
                     <h3>Séries de {{ store.settings.grand_set_name }}</h3>
-                </b-col>
-            </b-row>
-            <b-row class="mb-2">
-                <b-col>
-                    <b-btn
+                </BCol>
+            </BRow>
+            <BRow class="mb-2">
+                <BCol>
+                    <BButton
                         to="/grand_set_series_creation/-1/"
                         variant="success"
                     >
-                        <b-icon icon="plus" />
+                        <IBiPlus />
                         Ajouter
-                    </b-btn>
-                </b-col>
-            </b-row>
-            <b-row>
-                <b-col>
+                    </BButton>
+                </BCol>
+            </BRow>
+            <BRow>
+                <BCol>
                     <ul>
-                        <b-card
+                        <BCard
                             v-for="s in series"
                             :key="s.id"
                             no-body
                         >
-                            <b-card-body
+                            <BCardBody
                                 class="d-flex justify-content-between"
                             >
                                 <a :href="`#/grand_set_series_creation/${s.id}/`">
                                     {{ s.name }}
                                 </a>
                                 <span>
-                                    <b-btn
+                                    <BButton
                                         size="sm"
                                         :to="`/recommendation/${s.id}/`"
                                     >
                                         Recommander une activité
-                                    </b-btn>
-                                    <b-btn
+                                    </BButton>
+                                    <BButton
                                         size="sm"
                                         :to="`/grand_set_series_creation/${s.id}/`"
                                     >
                                         Modifier
-                                    </b-btn>
-                                    <b-btn
+                                    </BButton>
+                                    <BButton
                                         v-if="s.last_grand_set"
                                         size="sm"
                                         :to="`/grand_set/${s.last_grand_set}/`"
                                     >
                                         Voir
-                                    </b-btn>
-                                    <b-btn
+                                    </BButton>
+                                    <BButton
                                         variant="danger"
                                         size="sm"
                                         class="ml-4"
                                         @click="removeSerie(s.id)"
                                     >
-                                        <b-icon icon="trash" />
-                                    </b-btn>
+                                        <IBiTrash />
+                                    </BButton>
                                 </span>
-                            </b-card-body>
-                        </b-card>
+                            </BCardBody>
+                        </BCard>
                     </ul>
-                </b-col>
-            </b-row>
-        </b-container>
+                </BCol>
+            </BRow>
+        </BContainer>
     </div>
 </template>
 

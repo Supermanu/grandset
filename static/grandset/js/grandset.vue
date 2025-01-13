@@ -18,62 +18,62 @@
 <!-- along with Happyschool.  If not, see <http://www.gnu.org/licenses/>. -->
 
 <template>
-    <b-container>
-        <b-row
+    <BContainer>
+        <BRow
             v-if="grandSet"
             class="justify-content-md-center m-2"
         >
-            <b-col md="4">
+            <BCol md="4">
                 <h3>{{ date }} : {{ grandSet.grand_set_series.name }}</h3>
-            </b-col>
-            <b-col md="5">
-                <b-input-group class="mb-2">
-                    <b-form-input
+            </BCol>
+            <BCol md="5">
+                <BInputGroup class="mb-2">
+                    <BFormInput
                         v-model="search"
                         placeholder="Une activité, un groupe ou un élève"
                     />
 
                     <template #append>
-                        <b-input-group-text>
-                            <b-icon icon="search" />
-                        </b-input-group-text>
+                        <BInputGroupText>
+                            <IBiSearch />
+                        </BInputGroupText>
                     </template>
-                </b-input-group>
-            </b-col>
-            <b-col
+                </BInputGroup>
+            </BCol>
+            <BCol
                 md="2"
                 align-h="end"
             >
-                <b-dropdown
+                <BDropdown
                     variant="outline-secondary"
                     block
                     no-caret
                 >
                     <template #button-content>
-                        <b-icon icon="list" />
+                        <IBiList />
                         Options
                     </template>
-                    <b-dropdown-item
+                    <BDropdownItem
                         :to="`/grand_set_creation/${grandSet.grand_set_series.id}/${grandSetId}/`"
                     >
                         Gestion des activités
-                    </b-dropdown-item>
-                    <b-dropdown-item
+                    </BDropdownItem>
+                    <BDropdownItem
                         :to="`/grand_set_series_creation/${grandSet.grand_set_series.id}/`"
                     >
                         Gestion de la série
-                    </b-dropdown-item>
-                    <b-dropdown-item
+                    </BDropdownItem>
+                    <BDropdownItem
                         :to="`/grand_set_series/`"
                     >
                         Liste des séries
-                    </b-dropdown-item>
-                </b-dropdown>
-            </b-col>
-        </b-row>
-        <b-row v-if="grandSet">
-            <b-col>
-                <b-card-group columns>
+                    </BDropdownItem>
+                </BDropdown>
+            </BCol>
+        </BRow>
+        <BRow v-if="grandSet">
+            <BCol>
+                <BCardGroup columns>
                     <activity-overview />
                     <activity-overview
                         v-for="activity in filteredActivities"
@@ -81,10 +81,10 @@
                         ref="activities"
                         :activity="activity"
                     />
-                </b-card-group>
-            </b-col>
-        </b-row>
-    </b-container>
+                </BCardGroup>
+            </BCol>
+        </BRow>
+    </BContainer>
 </template>
 
 <script>
@@ -92,14 +92,7 @@ import axios from "axios";
 import Moment from "moment";
 Moment.locale("fr");
 
-import Vue from "vue";
-import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
-import "bootstrap-vue/dist/bootstrap-vue.css";
-
 import ActivityOverview from "./activityoverview.vue";
-
-Vue.use(BootstrapVue);
-Vue.use(IconsPlugin);
 
 export default {
     components: {

@@ -18,35 +18,34 @@
 <!-- along with Happyschool.  If not, see <http://www.gnu.org/licenses/>. -->
 
 <template>
-    <b-form-group
+    <BFormGroup
         :label="compName"
         label-cols-md="4"
         label-align-md="right"
     >
-        <b-input-group>
-            <b-form-input
+        <BInputGroup>
+            <BFormInput
                 :value="value"
                 type="range"
                 min="0"
                 max="2"
                 @input="updateData"
             />
-            <b-input-group-append
-                class="w-50"
-            >
-                <b-input-group-text
-                    :class="colorCompletion"
-                >
-                    {{ labelCompetence }}
-                    <b-icon
-                        v-if="value === '2'"
-                        icon="check"
-                        variant="success"
-                    />
-                </b-input-group-text>
-            </b-input-group-append>
-        </b-input-group>
-    </b-form-group>
+            <template #append>
+                <div class="w-50">
+                    <BInputGroupText
+                        :class="colorCompletion"
+                    >
+                        {{ labelCompetence }}
+                        <IBiCheck
+                            v-if="value === '2'"
+                            variant="success"
+                        />
+                    </BInputGroupText>
+                </div>
+            </template>
+        </BInputGroup>
+    </BFormGroup>
 </template>
 
 <script>

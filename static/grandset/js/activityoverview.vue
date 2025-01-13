@@ -19,11 +19,11 @@
 
 <template>
     <div>
-        <b-overlay
+        <BOverlay
             :show="loading"
             rounded="sm"
         >
-            <b-card
+            <BCard
                 class="mb-4 card"
                 footer-bg-variant="transparent"
                 no-body
@@ -32,24 +32,25 @@
                     <div class="opposite">
                         <strong>{{ activity ? activity.activity_name : "Groupes sans activité" }} ({{ groups.length }})</strong>
                         <span>
-                            <b-btn
+                            <BButton
                                 v-if="activity"
                                 size="sm"
                                 variant="outline-primary"
                                 :to="`/activitymanagement/${$route.params.grandSetId}/${activity.id}/`"
                             >
-                                <b-icon icon="eye-fill" />
-                            </b-btn>
+                                <IBiEyeFill />
+                            </BButton>
                         </span>
                     </div>
                 </template>
-                <b-list-group
+                <BListGroup
                     v-if="groups.length > 0 && !hide"
                     flush
                 >
-                    <b-list-group-item
+                    <BListGroupItem
                         v-for="group in groups"
                         :key="group.activityLog"
+                        class="d-flex justify-content-between align-items-center text-end"
                     >
                         <span v-if="group.matricule">
                             {{ group.last_name }} {{ group.first_name }}
@@ -57,70 +58,72 @@
                         <span v-else>
                             {{ group.group_name }}
                         </span>
-                        <em>
-                            <b-icon
-                                v-if="group.status === 'IN'"
-                                icon="chevron-double-right"
-                            />
-                            <b-icon
-                                v-if="group.status === 'OUT'"
-                                icon="chevron-bar-right"
-                            />
-                            {{ groupStatus(group) }}
-                        </em>
-                        <b-btn
-                            class="float-right ml-2"
-                            variant="outline-primary"
-                            size="sm"
-                            @click="activityChange(group)"
-                        >
-                            <b-icon icon="arrow-left-right" />
-                        </b-btn>
-                        <b-btn
-                            v-b-toggle="'students-' + group.activityLog"
-                            class="float-right ml-2"
-                            size="sm"
-                            variant="outline-secondary"
-                        >
-                            <b-icon icon="three-dots-vertical" />
-                        </b-btn>
-                        <br>
-                        <b-collapse 
-                            :id="'students-' + group.activityLog"
-                            :accordion="activity ? 'activity-' + activity.id : 'nullactivity'"
-                        >
-                            <span v-if="group.id">
-                                <small
-                                    v-for="(student, idx) in group.students_display"
-                                    :key="group.students_id[idx]"
-                                    :class="'text-muted ' + studentMissing(group.students_id[idx], group)"
+                        <span>
+                            <em>
+                                <IBiChevronDoubleRight
+                                    v-if="group.status === 'IN'"
+                                />
+                                <IBiChevronBarRight
+                                    v-if="group.status === 'OUT'"
+                                />
+                                {{ groupStatus(group) }}
+                            </em>
+                            <BButtonGroup>
+                                <BButton
+                                    class="float-right ml-2"
+                                    variant="outline-primary"
+                                    size="sm"
+                                    @click="activityChange(group)"
                                 >
-                                    {{ student }}
-                                    <b-link
-                                        @click="activityChange(group, group.students_id[idx])"
+                                    <IBiArrowLeftRight />
+                                </BButton>
+                                <BButton
+                                    v-b-toggle="'students-' + group.activityLog"
+                                    class="float-right ml-2"
+                                    size="sm"
+                                    variant="outline-secondary"
+                                >
+                                    <IBiThreeDotsVertical />
+                                </BButton>
+                            </BButtonGroup>
+                            <br>
+                            <BCollapse 
+                                :id="'students-' + group.activityLog"
+                                :accordion="activity ? 'activity-' + activity.id : 'nullactivity'"
+                            >
+                                <span v-if="group.id">
+                                    <small
+                                        v-for="(student, idx) in group.students_display"
+                                        :key="group.students_id[idx]"
+                                        :class="'text-muted ' + studentMissing(group.students_id[idx], group)"
                                     >
-                                        <b-icon icon="arrow-left-right" />
-                                    </b-link>
-                                    <br>
-                                </small>
-                            </span>
-                            <small>Mis à jour à {{ lastUpdate(group) }}</small>
-                        </b-collapse>
-                    </b-list-group-item>
-                </b-list-group>
-                <b-card-body v-else-if="hide">
-                    <b-btn
+                                        {{ student }}
+                                        <BLink
+                                            @click="activityChange(group, group.students_id[idx])"
+                                        >
+                                            <IBiArrowLeftRight />
+                                        </BLink>
+                                        <br>
+                                    </small>
+                                </span>
+                                <small>Mis à jour à {{ lastUpdate(group) }}</small>
+                            </BCollapse>
+                        </span>
+                    </BListGroupItem>
+                </BListGroup>
+                <BCardBody v-else-if="hide">
+                    <BButton
                         block
                         @click="hide=!hide"
                     >
                         Montrer tous les groupes
-                    </b-btn>
-                </b-card-body>
-                <b-card-body v-else>
+                    </BButton>
+                </BCardBody>
+                <BCardBody v-else>
                     Aucun groupe dans cette activité
-                </b-card-body>
-            </b-card>
-        </b-overlay>
+                </BCardBody>
+            </BCard>
+        </BOverlay>
     </div>
 </template>
 
