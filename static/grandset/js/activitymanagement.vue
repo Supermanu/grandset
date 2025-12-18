@@ -105,7 +105,7 @@ import axios from "axios";
 
 import { grandsetStore } from "./stores/index.js";
 
-const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+const token = { xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken" };
 
 export default {
     props: {
@@ -116,7 +116,7 @@ export default {
         grandSetId: {
             type: String,
             default: "-1",
-        }
+        },
     },
     data: function () {
         return {
@@ -127,19 +127,19 @@ export default {
     },
     mounted: function () {
         axios.get(`/grandset/api/activity/${this.activityId}/`)
-            .then(resp => {
+            .then((resp) => {
                 this.activity = resp.data;
             });
         axios.get(`/grandset/api/activity_log/?grand_set=${this.grandSetId}&activity=${this.activityId}&status=IN&status=ON&status=IN`)
-            .then(resp => {
+            .then((resp) => {
                 const logs = resp.data.results;
-                const promiseGroup = logs.map(l => {
+                const promiseGroup = logs.map((l) => {
                     if (l.group) return axios.get(`/grandset/api/group/${l.group}`);
                     return axios.get(`/annuaire/api/student/${l.student}`);
                 });
 
                 Promise.all(promiseGroup)
-                    .then(resps => {
+                    .then((resps) => {
                         this.logs = logs.map((l, i) => {
                             if (l.group) l.group = resps[i].data;
                             if (l.student) l.student = resps[i].data;
@@ -147,7 +147,6 @@ export default {
                         });
                         this.logs.sort((a, b) => a.status > b.status);
                     });
-
             });
     },
     methods: {
@@ -162,8 +161,8 @@ export default {
                 return;
             }
 
-            axios.patch(`/grandset/api/activity_log/${this.logs[logIndex].id}/`, {status: newStatus}, token)
-                .then(resp => {
+            axios.patch(`/grandset/api/activity_log/${this.logs[logIndex].id}/`, { status: newStatus }, token)
+                .then((resp) => {
                     let newLog = resp.data;
                     newLog.group = group;
 
@@ -171,15 +170,15 @@ export default {
                         this.logs.splice(logIndex, 1, newLog);
                         this.logs.sort((a, b) => a.status > b.status);
                     } else if (newStatus == "OUT") {
-                        this.show({props:{
-                            body:`${group ? group.group_name : this.logs[logIndex].student.last_name} n'est plus dans l'activité ${this.activity.activity_name}`,
+                        this.show({
+                            body: `${group ? group.group_name : this.logs[logIndex].student.last_name} n'est plus dans l'activité ${this.activity.activity_name}`,
                             variant: "warning",
                             noCloseButton: true,
-                        }});
+                        });
                         this.logs.splice(logIndex, 1);
                     }
                 });
-        }
-    }
+        },
+    },
 };
 </script>

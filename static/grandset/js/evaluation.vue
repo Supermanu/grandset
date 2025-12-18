@@ -86,7 +86,7 @@
                                 label-class="font-weight-bold pt-0"
                                 class="mb-0"
                             >
-                                <BFormGroup 
+                                <BFormGroup
                                     v-for="(stud, index) in students"
                                     :key="stud.matricule"
                                     label-cols-sm="3"
@@ -153,25 +153,25 @@ import CompetenceEvaluation from "./compeval.vue";
 
 import { grandsetStore } from "./stores/index.js";
 
-const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+const token = { xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken" };
 
 export default {
     components: {
-        CompetenceEvaluation
+        CompetenceEvaluation,
     },
     props: {
         activityLogId: {
             type: String,
-            default: "-1"
+            default: "-1",
         },
         groupId: {
             type: String,
-            default: "-1"
+            default: "-1",
         },
         studentId: {
             type: String,
-            default: "-1"
-        }
+            default: "-1",
+        },
     },
     data: function () {
         return {
@@ -193,7 +193,7 @@ export default {
             if (!this.group) return [];
 
             return this.group.students.filter(s => !this.activityLog.missing_student.includes(s.matricule));
-        }
+        },
     },
     mounted: function () {
         if (this.activityLogId === "-1") return;
@@ -201,7 +201,7 @@ export default {
         const isGroup = this.groupId !== "-1";
         const dataProm = [
             axios.get(`/grandset/api/activity_log/${this.activityLogId}/`),
-            axios.get(`/grandset/api/activity_evaluation/?activity_log=${this.activityLogId}`)
+            axios.get(`/grandset/api/activity_evaluation/?activity_log=${this.activityLogId}`),
         ];
         if (isGroup) {
             dataProm.push(axios.get(`/grandset/api/group/${this.groupId}/`));
@@ -210,26 +210,26 @@ export default {
         }
 
         Promise.all(dataProm)
-            .then(resps => {
+            .then((resps) => {
                 this.activityLog = resps[0].data;
 
                 const hasPreviousEval = resps[1].data.count > 0;
-                const students = isGroup ?
-                    resps[2].data.students.filter(s => !this.activityLog.missing_student.includes(s.matricule))
+                const students = isGroup
+                    ? resps[2].data.students.filter(s => !this.activityLog.missing_student.includes(s.matricule))
                     : [this.student];
                 this.individualEval = students
                     .filter(s => !this.activityLog.missing_student.includes(s.matricule))
                     .map(() => hasPreviousEval);
 
                 axios.get(`/grandset/api/activity/${this.activityLog.activity}/`)
-                    .then(resp => {
+                    .then((resp) => {
                         this.activity = resp.data;
                         this.useCompetencies = this.activity.competence.length > 0;
                         const evalKey = this.useCompetencies ? "competence_evaluation" : "evaluation";
                         if (this.useCompetencies) {
-                            this.generalEval = this.activity.competence_id.reduce((a,b) => (a[b] = 0, a),{});
+                            this.generalEval = this.activity.competence_id.reduce((a, b) => (a[b] = 0, a), {});
                         }
-                        this.evaluation = students.map(student => {
+                        this.evaluation = students.map((student) => {
                             if (hasPreviousEval) {
                                 return resps[1].data.results.find(ev => ev.student === student.matricule)[evalKey];
                             }
@@ -237,7 +237,7 @@ export default {
                         });
 
                         if (hasPreviousEval) {
-                            this.activityEvaluation = students.map(student => {
+                            this.activityEvaluation = students.map((student) => {
                                 return resps[1].data.results.find(ev => ev.student === student.matricule);
                             });
                             if (!isGroup) this.generalEval = this.evaluation[0];
@@ -250,12 +250,12 @@ export default {
                         this.loading = false;
                     });
             })
-            .catch(err => {
+            .catch((err) => {
                 console.log(err);
             });
     },
     methods: {
-        updateIndividual: function (value, compet=null) {
+        updateIndividual: function (value, compet = null) {
             this.individualEval.forEach((toNotUpdate, index) => {
                 if (toNotUpdate) return;
 
@@ -272,8 +272,8 @@ export default {
                 evalPromises = this.activityEvaluation.map((aEv, index) => {
                     let data = {
                         activity_log: this.activityLogId,
-                        student: this.group ?
-                            this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
+                        student: this.group
+                            ? this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
                             : this.student.matricule,
                     };
                     if (this.useCompetencies) {
@@ -287,8 +287,8 @@ export default {
                 evalPromises = this.evaluation.map((ev, index) => {
                     let data = {
                         activity_log: this.activityLogId,
-                        student: this.group ?
-                            this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
+                        student: this.group
+                            ? this.group.students_id.filter(s => !this.activityLog.missing_student.includes(s))[index]
                             : this.student.matricule,
                     };
                     if (this.useCompetencies) {
@@ -304,14 +304,14 @@ export default {
                 .then(() => {
                     this.$router.push(`/activitymanagement/${this.activityLog.grand_set}/${this.activityLog.activity}/`)
                         .then(() => {
-                            this.show({props:{
+                            this.show({
                                 body: "Les données ont bien été enregistrées.",
                                 variant: "success",
                                 noCloseButton: true,
-                            }});
+                            });
                         });
                 });
-        }
-    }
+        },
+    },
 };
 </script>

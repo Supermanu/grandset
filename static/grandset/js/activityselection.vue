@@ -254,14 +254,14 @@ import TextEditor from "@s:core/js/common/text_editor.vue";
 
 import { grandsetStore } from "./stores/index.js";
 
-import {getPeopleByName} from "@s:core/js/common/search.js";
+import { getPeopleByName } from "@s:core/js/common/search.js";
 
-const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+const token = { xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken" };
 
 export default {
     components: {
         TextEditor,
-        Multiselect
+        Multiselect,
     },
     props: {
         series: {
@@ -310,7 +310,7 @@ export default {
         filteredActivities() {
             if (this.search === "") return this.availActivities;
 
-            return this.availActivities.filter(a => {
+            return this.availActivities.filter((a) => {
                 return a.activity_name.toLowerCase().includes(this.search.toLowerCase());
             });
         },
@@ -318,11 +318,11 @@ export default {
     watch: {
         /**
          * Handle returned errors states.
-         * 
+         *
          * @param {Object} newErrors Errors states with error message.
          */
         errors: function (newErrors) {
-            Object.keys(this.inputStates).forEach(key => {
+            Object.keys(this.inputStates).forEach((key) => {
                 if (key in newErrors) {
                     this.inputStates[key] = newErrors[key].length == 0;
                 } else {
@@ -332,16 +332,16 @@ export default {
         },
         series: function () {
             this.initActivities();
-        }
+        },
     },
-    mounted () {
+    mounted() {
         this.initActivities();
     },
     methods: {
         initActivities: function () {
             // Load all activities available.
             axios.get("/grandset/api/activity/")
-                .then(resp => {
+                .then((resp) => {
                     const selectedActivities = resp.data.results.filter(r => this.modelValue.includes(r.id));
                     this.availActivities = resp.data.results.filter(a => !this.modelValue.includes(a.id));
 
@@ -352,7 +352,7 @@ export default {
         },
         openModal: function (activity) {
             const modalActivity = Object.assign({}, activity);
-            modalActivity.average_time = modalActivity.average_time.slice(3,5);
+            modalActivity.average_time = modalActivity.average_time.slice(3, 5);
             this.newActivity = modalActivity;
             this.$bvModal.show("creation-activity-modal");
         },
@@ -364,21 +364,21 @@ export default {
                 // eslint-disable-next-line no-undef
                 value => user_properties.teaching.includes(value));
             getPeopleByName(searchQuery, teachings, "responsible")
-                .then( (resp) => {
+                .then((resp) => {
                 // Avoid that a previous search overwrites a faster following search results.
                     if (this.searchId !== currentSearch)
                         return;
                     this.responsibleOptions = resp.data;
                 // this.searching = false;
                 })
-                .catch( (err) => {
+                .catch((err) => {
                     alert(err);
                 // this.searching = false;
                 });
         },
-        /** 
+        /**
          * Assign text error if any.
-         * 
+         *
          * @param {String} err Field name.
          */
         errorMsg(err) {
@@ -400,13 +400,13 @@ export default {
             if (isModif) url += `${this.newActivity.id}/`;
             const send = isModif ? axios.put : axios.post;
 
-            send(url, data, token).then(resp => {
+            send(url, data, token).then((resp) => {
                 if (!isModif) {
                     console.log(resp.data);
                     this.$emit("update:modelValue", this.modelValue.concat(resp.data));
                     this.$emit("update:state");
                 } else {
-                    const updatedActivities = this.modelValue.map(a => {
+                    const updatedActivities = this.modelValue.map((a) => {
                         if (a.id == resp.data.id) a = resp.data;
                         return a;
                     });
@@ -416,7 +416,7 @@ export default {
                     this.$bvModal.hide("creation-activity-modal");
                 });
             })
-                .catch(err => {
+                .catch((err) => {
                     this.errors = err.response.data;
                 });
         },
@@ -433,7 +433,7 @@ export default {
         resetNewActivity: function () {
             Object.assign(this.$data.newActivity, this.$options.data().newActivity);
             if ("id" in this.newActivity) delete this.newActivity.id;
-        }
+        },
     },
 };
 </script>

@@ -33,52 +33,52 @@ const router = createRouter({
             path: "",
             redirect: () => {
                 return "/grand_set_series/";
-            }
+            },
         },
         {
             path: "/grand_set_series/",
             component: GrandSetSeries,
-            props: true
+            props: true,
         },
         {
             path: "/grand_set_series_creation/:objectId/",
             component: GrandSetCreation,
-            props: true
+            props: true,
         },
         {
             path: "/grand_set_creation/:grandSetSeriesId/:objectId/",
             component: GrandSetCreation,
             props: (route) => {
-                const props = {...route.params };
+                const props = { ...route.params };
                 props.series = false;
                 return props;
-            }
+            },
         },
         {
             path: "/grand_set/:grandSetId/",
             component: GrandSet,
-            props: true
+            props: true,
         },
         {
             path: "/activitychange/:grandSetId/:groupId/:studentId/:activityLogId/",
             component: ActivityChange,
-            props: true
+            props: true,
         },
         {
             path: "/activitymanagement/:grandSetId/:activityId/",
             component: ActivityManagement,
-            props: true
+            props: true,
         },
         {
             path: "/evaluation/:activityLogId/:groupId/:studentId/",
             component: Evaluation,
-            props: true
+            props: true,
         },
         {
             path: "/recommendation/:grandSetSeriesId/",
             component: Recommendation,
-            props: true
-        }
+            props: true,
+        },
     ],
     history: createWebHashHistory(),
 });

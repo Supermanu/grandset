@@ -23,5 +23,5 @@ export const grandsetStore = defineStore("grandset", {
     state: () => ({
         // eslint-disable-next-line no-undef
         settings: settings,
-    })
+    }),
 });

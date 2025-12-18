@@ -217,14 +217,14 @@ import GroupSelection from "./groupselection.vue";
 
 import { grandsetStore } from "./stores/index.js";
 
-const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+const token = { xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken" };
 
 export default {
     components: {
         ActivitySelection,
         GroupSelection,
     },
-    beforeRouteLeave (to, from, next) {
+    beforeRouteLeave(to, from, next) {
         if (this.hasChanged && this.objectId !== "-1") {
             if (!confirm("Des données n'ont pas été enregistrées, êtes-vous sûr de vouloir quitter la page ?")) {
                 next(false);
@@ -235,16 +235,16 @@ export default {
     props: {
         series: {
             type: Boolean,
-            default: true
+            default: true,
         },
         objectId: {
             type: String,
-            default: "-1"
+            default: "-1",
         },
         grandSetSeriesId: {
             type: String,
-            default: "-1"
-        }
+            default: "-1",
+        },
     },
     data: function () {
         return {
@@ -273,11 +273,11 @@ export default {
     watch: {
         /**
          * Handle returned errors states.
-         * 
+         *
          * @param {Object} newErrors Errors states with error message.
          */
         errors: function (newErrors) {
-            Object.keys(this.inputStates).forEach(key => {
+            Object.keys(this.inputStates).forEach((key) => {
                 if (key in newErrors) {
                     this.inputStates[key] = newErrors[key].length == 0;
                 } else {
@@ -287,15 +287,15 @@ export default {
         },
         series: function () {
             this.initComponent();
-        }
+        },
     },
     mounted: function () {
         this.initComponent();
     },
     methods: {
-        /** 
+        /**
          * Assign text error if any.
-         * 
+         *
          * @param {String} err Field name.
          */
         errorMsg(err) {
@@ -307,17 +307,18 @@ export default {
         },
         /** Submit Grand Set Serie data to the server. */
         submit: function () {
-            const data = this.series ? {
-                name: this.name,
-                date_start: this.date_start,
-                date_end: this.date_end,
-                activities: this.activities.map(a => a.id),
-                groups: this.groups.map(g => g.id),
-            } :
-                {
+            const data = this.series
+                ? {
+                    name: this.name,
+                    date_start: this.date_start,
+                    date_end: this.date_end,
+                    activities: this.activities.map(a => a.id),
+                    groups: this.groups.map(g => g.id),
+                }
+                : {
                     date: this.date,
                     activities: this.activities.map(a => a.id),
-                    grand_set_series_id: this.grandSetSeriesId
+                    grand_set_series_id: this.grandSetSeriesId,
                 };
 
             const isNewObj = this.objectId === "-1";
@@ -327,35 +328,35 @@ export default {
 
             const send = isNewObj ? axios.post : axios.put;
             send(url, data, token)
-                .then(resp => {
+                .then((resp) => {
                     if (isNewObj && !this.series) {
                         const path = `/grand_set/${resp.data.id}/`;
                         this.$router.push(path).then(() => {
-                            this.show({props:{
-                                body:"Les données ont bien été sauvegardées",
+                            this.show({
+                                body: "Les données ont bien été sauvegardées",
                                 variant: "success",
                                 noCloseButton: true,
-                            }});
+                            });
                         });
                     } else if (isNewObj) {
                         const path = `/grand_set_series_creation/${resp.data.id}/`;
                         this.$router.push(path).then(() => {
-                            this.show({props:{
-                                body:"Les données ont bien été sauvegardées",
+                            this.show({
+                                body: "Les données ont bien été sauvegardées",
                                 variant: "success",
                                 noCloseButton: true,
-                            }});
+                            });
                         });
                     } else {
-                        this.show({props:{
-                            body:"Les données ont bien été sauvegardées",
+                        this.show({
+                            body: "Les données ont bien été sauvegardées",
                             variant: "success",
                             noCloseButton: true,
-                        }});
+                        });
                     }
                     this.hasChanged = false;
                 })
-                .catch(err => {
+                .catch((err) => {
                     this.errors = err.response.data;
                 });
         },
@@ -364,9 +365,9 @@ export default {
                 if (Number(this.objectId) > 0) {
                     Promise.all([
                         axios.get(`/grandset/api/grandset_series/${this.objectId}`),
-                        axios.get(`/grandset/api/grandset/?grand_set_series=${this.objectId}&ordering=-date`)
+                        axios.get(`/grandset/api/grandset/?grand_set_series=${this.objectId}&ordering=-date`),
                     ])
-                        .then(resps => {
+                        .then((resps) => {
                             this.name = resps[0].data.name;
                             this.date_start = resps[0].data.date_start;
                             this.date_end = resps[0].data.date_end;
@@ -383,7 +384,7 @@ export default {
                 if (this.objectId !== "-1") {
                     console.log("grandset one shot");
                     axios.get(`/grandset/api/grandset/${this.objectId}/`)
-                        .then(resp => {
+                        .then((resp) => {
                             this.date = resp.data.date;
                             this.activities = resp.data.activities;
                             console.log("oh", this.activities);
@@ -394,7 +395,7 @@ export default {
                 } else {
                     console.log("series…");
                     axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}/`)
-                        .then(resp => {
+                        .then((resp) => {
                             this.grandSetSeries = resp.data;
                             this.activities = this.grandSetSeries.activities;
                             console.log(this.activities);
@@ -402,8 +403,8 @@ export default {
                         });
                 }
             }
-        }
-    }
+        },
+    },
 };
 </script>
 

@@ -114,7 +114,7 @@
                         <span
                             v-if="isNaN(group)"
                             class="p-1"
-                        > 
+                        >
                             {{ group.group_name }}:
                             <small>
                                 {{ group.students_display.join(", ") }}
@@ -193,20 +193,20 @@ import axios from "axios";
 import Multiselect from "vue-multiselect";
 import "vue-multiselect/dist/vue-multiselect.css";
 
-import {getPeopleByName} from "@s:core/js/common/search.js";
+import { getPeopleByName } from "@s:core/js/common/search.js";
 import { grandsetStore } from "./stores/index.js";
 
-const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+const token = { xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken" };
 
 export default {
     components: {
-        Multiselect
+        Multiselect,
     },
     props: {
         /** The selected groups */
         modelValue: {
             type: Array,
-            default: () => []
+            default: () => [],
         },
         series: {
             type: Boolean,
@@ -237,7 +237,7 @@ export default {
         filteredGroups: function () {
             if (this.search === "") return this.availGroup;
 
-            return this.availGroup.filter(a => {
+            return this.availGroup.filter((a) => {
                 console.log(a);
                 const isInGroupName = a.group_name.toLowerCase().includes(this.search.toLowerCase());
                 const isInStudentsName = a.students_display.join("").toLowerCase().includes(this.search.toLowerCase());
@@ -248,11 +248,11 @@ export default {
     watch: {
         /**
          * Handle returned errors states.
-         * 
+         *
          * @param {Object} newErrors Errors states with error message.
          */
         errors: function (newErrors) {
-            Object.keys(this.inputStates).forEach(key => {
+            Object.keys(this.inputStates).forEach((key) => {
                 if (key in newErrors) {
                     this.inputStates[key] = newErrors[key].length == 0;
                 } else {
@@ -261,11 +261,11 @@ export default {
             });
         },
     },
-    mounted () {
+    mounted() {
         if (this.series) {
             // Load all groups available.
             axios.get("/grandset/api/group/")
-                .then(resp => {
+                .then((resp) => {
                     const selectedGroups = resp.data.results.filter(r => this.modelValue.includes(r.id));
                     this.availGroup = resp.data.results.filter(r => !this.modelValue.includes(r.id));
                     this.$emit("update:modelValue", selectedGroups);
@@ -292,7 +292,7 @@ export default {
                 // Avoid that a previous search overwrites a faster following search results.
                     if (this.searchId !== currentSearch)
                         return;
-                    this.studentOptions = resp.data.map(option => {
+                    this.studentOptions = resp.data.map((option) => {
                         if (this.modelValue.find(group => group.students_id.includes(option.matricule))) {
                             option.$isDisabled = true;
                         }
@@ -300,14 +300,14 @@ export default {
                     });
                 // this.searching = false;
                 })
-                .catch( (err) => {
+                .catch((err) => {
                     alert(err);
                 // this.searching = false;
                 });
         },
-        /** 
+        /**
          * Assign text error if any.
-         * 
+         *
          * @param {String} err Field name.
          */
         errorMsg(err) {
@@ -342,12 +342,12 @@ export default {
             if (isModif) url += `${this.newGroup.id}/`;
             const send = isModif ? axios.put : axios.post;
 
-            send(url, data, token).then(resp => {
+            send(url, data, token).then((resp) => {
                 if (!isModif) {
                     this.$emit("update:modelValue", this.modelValue.concat(resp.data));
                     this.$emit("update:state");
                 } else {
-                    const updatedGroups = this.modelValue.map(a => {
+                    const updatedGroups = this.modelValue.map((a) => {
                         if (a.id == resp.data.id) a = resp.data;
                         return a;
                     });
@@ -357,14 +357,14 @@ export default {
                     this.$bvModal.hide("creation-group-modal");
                 });
             })
-                .catch(err => {
+                .catch((err) => {
                     this.errors = err.response.data;
                 });
         },
         resetNewGroup: function () {
             Object.assign(this.$data.newGroup, this.$options.data().newGroup);
             if ("id" in this.newGroup) delete this.newGroup.id;
-        }
-    }
+        },
+    },
 };
 </script>

@@ -89,12 +89,12 @@
 </template>
 
 <script>
-import Moment from "moment";
+import { DateTime } from "luxon";
 import axios from "axios";
 
 import { grandsetStore } from "./stores/index.js";
 
-const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+const token = { xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken" };
 
 export default {
     data: function () {
@@ -105,14 +105,14 @@ export default {
     },
     mounted: function () {
         axios.get("/grandset/api/grandset_series/")
-            .then(resp => {
-                this.series = resp.data.results.map(s => {
+            .then((resp) => {
+                this.series = resp.data.results.map((s) => {
                     s.last_grand_set = null;
                     return s;
                 });
-                const last_grand_set = this.series.map(s => axios.get(`/grandset/api/grandset/?grand_set_series=${s.id}&date__gte=${Moment().format("L")}`));
+                const last_grand_set = this.series.map(s => axios.get(`/grandset/api/grandset/?grand_set_series=${s.id}&date__gte=${DateTime.now().toFormat("L")}`));
                 Promise.all(last_grand_set)
-                    .then(resps => {
+                    .then((resps) => {
                         resps.forEach((gS, idx) => {
                             this.series[idx].last_grand_set = gS.data.count > 0 ? gS.data.results[0].id : null;
                         });
@@ -128,20 +128,20 @@ export default {
                 cancelTitle: "Non",
                 footerClass: "p-2",
                 hideHeaderClose: false,
-                centered: true
+                centered: true,
             })
-                .then(response => {
+                .then((response) => {
                     if (response) {
                         this.series.splice(this.series.findIndex(s => s.id === serieId), 1);
                         axios.delete(`/grandset/api/grandset_series/${serieId}/`, token);
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     // An error occurred
                     console.log(err);
                 });
             return;
-        }
+        },
     },
 };
 </script>

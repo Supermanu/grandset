@@ -57,12 +57,12 @@ export default {
         /** Competence name. */
         compName: {
             type: String,
-            default: ""
+            default: "",
         },
         value: {
             type: Number,
-            default: 0
-        }
+            default: 0,
+        },
     },
     data: function () {
         return {
@@ -71,13 +71,13 @@ export default {
     computed: {
         colorCompletion: function () {
             switch (this.value) {
-            case 1:
-                return "half-completed";
-            case 2:
-                return "completed";
+                case 1:
+                    return "half-completed";
+                case 2:
+                    return "completed";
 
-            default:
-                return "";
+                default:
+                    return "";
             }
         },
         labelCompetence: function () {
@@ -87,7 +87,7 @@ export default {
     methods: {
         updateData: function (event) {
             this.$emit("input", parseInt(event));
-        }
+        },
     },
 };
 </script>

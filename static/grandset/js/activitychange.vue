@@ -61,7 +61,7 @@
                         >
                             {{ activity.activity_name }}
                             <span>
-                                <small>± {{ getMinutes(activity.average_time) }}min.</small> 
+                                <small>± {{ getMinutes(activity.average_time) }}min.</small>
                                 <BBadge
                                     variant="primary"
                                     pill
@@ -87,7 +87,7 @@
                         :key="log.id"
                         class="border-bottom"
                     >
-                        ⇒ <small>{{ lastUpdate(log.datetime_update) }}</small>: 
+                        ⇒ <small>{{ lastUpdate(log.datetime_update) }}</small>:
                         <strong>{{ log.activity.activity_name }}</strong>
                         <span v-if="student">({{ log.group ? "en groupe" : "seul(e)" }})</span>
                     </p>
@@ -100,19 +100,17 @@
 <script>
 import axios from "axios";
 
-import Moment from "moment";
-import "moment/dist/locale/fr";
-Moment.locale("fr");
+import { DateTime } from "luxon";
 
 import { grandsetStore } from "./stores/index.js";
 
-const token = {xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken"};
+const token = { xsrfCookieName: "csrftoken", xsrfHeaderName: "X-CSRFToken" };
 
 export default {
     props: {
         activityLogId: {
             type: String,
-            default: "-1"
+            default: "-1",
         },
         grandSetId: {
             type: String,
@@ -125,7 +123,7 @@ export default {
         studentId: {
             type: String,
             default: "-1",
-        }
+        },
     },
     data: function () {
         return {
@@ -142,7 +140,7 @@ export default {
         // Get full activityLog object.
         if (this.activityLogId !== "-1") {
             axios.get(`/grandset/api/activity_log/${this.activityLogId}/`)
-                .then(actLogResp => {
+                .then((actLogResp) => {
                     this.activityLog = actLogResp.data;
                 });
         }
@@ -150,7 +148,7 @@ export default {
         // Get full group object.
         if (this.groupId !== "-1") {
             axios.get(`/grandset/api/group/${this.groupId}`)
-                .then(respGroup => {
+                .then((respGroup) => {
                     this.group = respGroup.data;
                 });
         }
@@ -158,20 +156,20 @@ export default {
         // Get full student object.
         if (this.studentId !== "-1") {
             axios.get(`/annuaire/api/student/${this.studentId}/`)
-                .then(resp => {
+                .then((resp) => {
                     this.student = resp.data;
                 });
         }
 
         // Get activities of the current GrandSet.
         axios.get(`/grandset/api/grandset/${this.grandSetId}/`)
-            .then(respGrandSet => {
-                const promiseActivities = respGrandSet.data.activities.map(activity => {
+            .then((respGrandSet) => {
+                const promiseActivities = respGrandSet.data.activities.map((activity) => {
                     return axios.get(`/grandset/api/activity/${activity}/`);
                 });
 
                 Promise.all(promiseActivities)
-                    .then(resps => {
+                    .then((resps) => {
                         const activities = resps.map(r => r.data);
                         let urlStat = `/grandset/api/activity_stat/${this.grandSetId}/`;
                         if (this.studentId !== "-1") {
@@ -180,9 +178,9 @@ export default {
                             urlStat += `group/${this.groupId}/`;
                         }
                         axios.get(urlStat)
-                            .then(respStat => {
+                            .then((respStat) => {
                                 const activityCount = JSON.parse(respStat.data);
-                                activities.forEach(activity => {
+                                activities.forEach((activity) => {
                                     const actCount = activityCount.find(aC => aC.activity == activity.id);
                                     if (actCount) {
                                         activity.done = "count_log" in actCount ? actCount.count_log : 0;
@@ -199,8 +197,8 @@ export default {
                         // Get activity history for the current group.
                         const filters = this.group ? `group=${this.groupId}` : `student=${this.studentId}`;
                         axios.get(`/grandset/api/activity_log/?${filters}&ordering=-datetime_update`)
-                            .then(respLogs => {
-                                this.logs = respLogs.data.results.filter(log => activities.find(a => a.id == log.activity)).map(log => {
+                            .then((respLogs) => {
+                                this.logs = respLogs.data.results.filter(log => activities.find(a => a.id == log.activity)).map((log) => {
                                     log.activity = activities.find(a => a.id == log.activity);
                                     return log;
                                 });
@@ -217,11 +215,11 @@ export default {
             return parseInt(minutes.slice(0, 2)) * 60 + parseInt(minutes.slice(3, 5));
         },
         lastUpdate: function (lastUpdate) {
-            return String(Moment(lastUpdate).calendar()).toLowerCase();
+            return String(DateTime.fromISO(lastUpdate).toLocaleString()).toLowerCase();
         },
         changeActivity: function (activity, event) {
             // Avoid double clicks
-            if(!event.detail || event.detail === 1){
+            if (!event.detail || event.detail === 1) {
                 setTimeout(() => {
                     if (this.triggered) return;
 
@@ -229,8 +227,8 @@ export default {
                     if (this.activityLog) {
                         axios.patch(
                             `/grandset/api/activity_log/${this.activityLogId}/`,
-                            {status: "DON"},
-                            token
+                            { status: "DON" },
+                            token,
                         )
                             .then(() => {
                                 this.createNewLog(activity);
@@ -252,11 +250,11 @@ export default {
                 .then(() => {
                     this.triggered = false;
                     this.$router.push(`/grand_set/${this.grandSetId}`).then(() => {
-                        this.show({props:{
+                        this.show({
                             body: `${this.group ? this.group.group_name : this.student.display} est maintenant dans l'activité ${activity.activity_name}`,
                             variant: "success",
                             noCloseButton: true,
-                        }});
+                        });
                     });
                 });
         },

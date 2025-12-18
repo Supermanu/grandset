@@ -87,7 +87,7 @@
                                 </BButton>
                             </BButtonGroup>
                             <br>
-                            <BCollapse 
+                            <BCollapse
                                 :id="'students-' + group.activityLog"
                                 :accordion="activity ? 'activity-' + activity.id : 'nullactivity'"
                             >
@@ -130,16 +130,14 @@
 <script>
 import axios from "axios";
 
-import Moment from "moment";
-Moment.locale("fr");
-
+import { DateTime } from "luxon";
 
 export default {
     props: {
         activity: {
             type: Object,
             default: () => {},
-        }
+        },
     },
     data: function () {
         return {
@@ -151,21 +149,21 @@ export default {
     mounted: function () {
         if (this.activity) {
             axios.get(`/grandset/api/activity_log/?activity=${this.activity.id}&grand_set=${this.$route.params.grandSetId}&ordering=-datetime_update`)
-                .then(resp => {
+                .then((resp) => {
                     const ongoingLogs = resp.data.results.filter(aL => aL.status != "DON");
-                    const objects = ongoingLogs.map(aL => {
+                    const objects = ongoingLogs.map((aL) => {
                         const objectType = aL.group ? "group" : "student";
                         const objectId = aL.group ? aL.group : aL.student;
                         return { objectId: objectId, objectType: objectType };
                     });
-                    Promise.all(objects.map(o => {
+                    Promise.all(objects.map((o) => {
                         if (o.objectType == "group") {
                             return axios.get(`/grandset/api/group/${o.objectId}/`);
                         } else if (o.objectType == "student") {
                             return axios.get(`/annuaire/api/student/${o.objectId}/`);
                         }
                     }))
-                        .then(values => {
+                        .then((values) => {
                             this.groups = values.map((r, i) => {
                                 let group = r.data;
                                 group.status = ongoingLogs[i].status;
@@ -180,7 +178,7 @@ export default {
                     // Nobody in that activity.
                     if (objects.length == 0) this.loading = false;
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.log(err);
                     this.loading = false;
                 });
@@ -188,11 +186,11 @@ export default {
             this.hide = true;
             // Show groups without activity.
             axios.get(`/grandset/api/group_without_activity/${this.$route.params.grandSetId}/`)
-                .then(resp => {
+                .then((resp) => {
                     this.groups = resp.data;
                     this.loading = false;
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.log(err);
                     this.loading = false;
                 });
@@ -203,7 +201,7 @@ export default {
             if ("missing_student" in group && group.missing_student.find(s => s === studentId)) return "text-strike";
             return "";
         },
-        activityChange: function (group, student="-1") {
+        activityChange: function (group, student = "-1") {
             console.log(group);
             console.log(student);
             const grandSetId = this.$route.params.grandSetId;
@@ -213,29 +211,29 @@ export default {
             this.$router.push(`/activitychange/${grandSetId}/${groupId}/${studentId}/${activityLogId}`);
         },
         lastUpdate: function (group) {
-            return Moment(group.datetime_update).format("HH:mm");
+            return DateTime.fromISO(group.datetime_update).toFormat("HH:mm");
         },
         groupStatus: function (group) {
             switch (group.status) {
-            case "ON":
-                return "";
-            case "IN":
-                return "En route vers l'activité";
-            case "OUT":
-                return "Sorti de l'activité";
-            default:
-                return "";
+                case "ON":
+                    return "";
+                case "IN":
+                    return "En route vers l'activité";
+                case "OUT":
+                    return "Sorti de l'activité";
+                default:
+                    return "";
             }
         },
         hasGroupOrStudent: function (query) {
-            const filteredGroups = this.groups.filter(g => {
+            const filteredGroups = this.groups.filter((g) => {
                 const isInGroupName = g.group_name.toLowerCase().includes(query.toLowerCase());
                 const isInStudentsName = g.students_display.join("").toLowerCase().includes(query.toLowerCase());
                 return isInGroupName || isInStudentsName;
             });
             return filteredGroups.length > 0;
-        }
-    }
+        },
+    },
 };
 </script>
 

@@ -89,20 +89,19 @@
 
 <script>
 import axios from "axios";
-import Moment from "moment";
-Moment.locale("fr");
+import { DateTime } from "luxon";
 
 import ActivityOverview from "./activityoverview.vue";
 
 export default {
     components: {
-        ActivityOverview
+        ActivityOverview,
     },
     props: {
         grandSetId: {
             type: String,
             default: "-1",
-        }
+        },
     },
     data: function () {
         return {
@@ -114,30 +113,28 @@ export default {
         filteredActivities: function () {
             if (this.search === "") return this.grandSet.activities;
 
-            return this.grandSet.activities.filter(a => {
+            return this.grandSet.activities.filter((a) => {
                 const activityOverview = this.$refs.activities.find(aO => aO.activity.id === a.id);
                 const groupAndStudSearch = activityOverview ? activityOverview.hasGroupOrStudent(this.search) : false;
                 const hasActivity = a.activity_name.toLowerCase().includes(this.search.toLowerCase());
                 return groupAndStudSearch || hasActivity;
-                
             });
         },
         date: function () {
             if (!this.grandSet) return "";
 
-            return Moment(this.grandSet.date).format("DD/MM/YY");
-        }
+            return DateTime.fromISO(this.grandSet.date).toFormat("dd/MM/yy");
+        },
     },
     mounted: function () {
         Promise.all([
             axios.get(`/grandset/api/grandset/${this.grandSetId}/`),
-            axios.get("/grandset/api/activity/")
-        ]).then(resps => {
+            axios.get("/grandset/api/activity/"),
+        ]).then((resps) => {
             resps[0].data.activities = resps[1].data.results;
             this.grandSet = resps[0].data;
-
         });
-    }
+    },
 };
 </script>
 

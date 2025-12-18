@@ -118,17 +118,17 @@ import "vue-multiselect/dist/vue-multiselect.css";
 
 import { grandsetStore } from "./stores/index.js";
 
-import {getPeopleByName} from "@s:core/js/common/search.js";
+import { getPeopleByName } from "@s:core/js/common/search.js";
 
 export default {
     components: {
-        Multiselect
+        Multiselect,
     },
     props: {
         grandSetSeriesId: {
             default: "-1",
-            type: String
-        }
+            type: String,
+        },
     },
     data: function () {
         return {
@@ -146,7 +146,7 @@ export default {
         if (this.grandSetSeriesId === "-1") return;
 
         axios.get(`/grandset/api/grandset_series/${this.grandSetSeriesId}`)
-            .then(resp => {
+            .then((resp) => {
                 this.grandSet = resp.data;
                 this.recActivities = resp.data.activities.map(() => false);
                 this.loading = false;
@@ -161,18 +161,18 @@ export default {
                 // eslint-disable-next-line no-undef
                 value => user_properties.teaching.includes(value));
             getPeopleByName(searchQuery, teachings, "student")
-                .then( (resp) => {
+                .then((resp) => {
                 // Avoid that a previous search overwrites a faster following search results.
                     if (this.searchId !== currentSearch)
                         return;
                     this.studentOptions = resp.data;
                 // this.searching = false;
                 })
-                .catch( (err) => {
+                .catch((err) => {
                     alert(err);
                 // this.searching = false;
                 });
         },
-    }
+    },
 };
 </script>
